@@ -8,6 +8,7 @@ import { StudentPortalComponent } from './components/student-portal/student-port
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -25,7 +26,7 @@ export class AppComponent {
   isAuthenticated = this.authService.isAuthenticated;
   currentUser = this.authService.currentUser;
 
-  logout(): void {
-    this.authService.logout();
+  async logout(): Promise<void> {
+    await this.authService.logout();
   }
 }

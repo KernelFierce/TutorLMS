@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject, computed, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TutorDataService } from '../../tutor-data.service';
+import { DataService } from '../../data.service';
 import { AuthService } from '../../auth.service';
-import { EnrichedStudent, UserRole, LessonPlan } from '../../models';
+import { Student, Course, LessonPlan } from '../../models';
 import { ScheduleViewComponent } from '../schedule-view/schedule-view.component';
 import { AssignmentsViewComponent } from '../assignments-view/assignments-view.component';
 import { MessagingViewComponent } from '../messaging-view/messaging-view.component';
@@ -19,7 +19,7 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, ScheduleViewComponent, AssignmentsViewComponent, MessagingViewComponent, RescheduleViewComponent, StudentProfileComponent, TeacherProfileComponent, WeeklyPlannerComponent, FormsModule],
 })
 export class TeacherPortalComponent {
-  tutorService = inject(TutorDataService);
+  dataService = inject(DataService);
   authService = inject(AuthService);
 
   @Output() logout = new EventEmitter<void>();
@@ -27,55 +27,19 @@ export class TeacherPortalComponent {
   activeView = signal<'dashboard' | 'students' | 'student-profile' | 'planner' | 'assignments' | 'reschedule-requests' | 'messages' | 'my-profile'>('dashboard');
 
   currentUser = this.authService.currentUser;
-  todaysAgenda = this.tutorService.todaysAgenda;
-  assignments = this.tutorService.assignmentsForCurrentUser;
-  
+  students = this.dataService.students;
+  courses = this.dataService.courses;
+
   profileStudentId = signal<string | null>(null);
   
   isAddPlanModalOpen = signal(false);
   planForStudentId = signal<string | null>(null);
   newLessonPlanModel = signal({ topics: '', notes: '' });
 
-  enrichedStudents = computed<EnrichedStudent[]>(() => {
-    return this.tutorService.studentsForCurrentUser().map(student => ({
-      ...student,
-      financials: this.tutorService.getStudentFinancials(student.studentId),
-      assignmentStats: this.tutorService.getStudentAssignmentStats(student.studentId)
-    }));
-  });
-  
-  selectedStudentProfile = computed(() => {
-    const studentId = this.profileStudentId();
-    if (!studentId) return null;
-    
-    const student = this.enrichedStudents().find(s => s.studentId === studentId);
-    if (!student) return null;
+  // TODO: Re-implement student and profile logic based on the new data structures.
 
-    return {
-      student,
-      schedule: this.tutorService.scheduleForSelectedStudent(studentId),
-      assignments: this.tutorService.assignmentsForSelectedStudent(studentId),
-      attendance: this.tutorService.attendanceForSelectedStudent(studentId),
-      lessonPlans: this.tutorService.lessonPlansForSelectedStudent(studentId)
-    };
-  });
-  
-  teacherProfile = computed(() => {
-    const teacherId = this.currentUser()?.entityId;
-    if (!teacherId) return null;
-    return this.tutorService.getTeacherProfileData(teacherId);
-  });
-  
   setView(view: any): void {
-    if (view !== 'student-profile') {
-        this.profileStudentId.set(null);
-    }
     this.activeView.set(view);
-  }
-
-  viewStudentProfile(studentId: string): void {
-      this.profileStudentId.set(studentId);
-      this.setView('student-profile');
   }
 
   openAddPlanModal(studentId: string): void {
@@ -98,12 +62,8 @@ export class TeacherPortalComponent {
       return;
     }
     
-    this.tutorService.addLessonPlan({
-      studentId: studentId,
-      teacherId: teacherId,
-      date: new Date().toISOString().split('T')[0],
-      ...planData
-    });
+    // TODO: Implement addLessonPlan in DataService
+    // this.dataService.addLessonPlan(...);
 
     alert('Lesson plan added successfully!');
     this.closeAddPlanModal();
