@@ -10,106 +10,122 @@ export class AuthService {
   currentUser = signal<User | null>(null);
   isAuthenticated = computed(() => !!this.currentUser());
 
-  // --- CONFIGURATION (Replace with your actual credentials later) ---
-  // 1. Get this from the Google Cloud Console after setting up OAuth 2.0
-  private GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
-  // 2. Get this from deploying your Google Apps Script as a Web App
-  private WEB_APP_URL = 'YOUR_WEB_APP_URL';
+  // --- CONFIGURATION ---
+  // IMPORTANT: Paste the Client ID you created in the Google Cloud Console here.
+  private GOOGLE_CLIENT_ID = 'PASTE_YOUR_GOOGLE_CLIENT_ID_HERE';
 
 
   constructor() {
-    // In a real app, you would initialize Google Sign-In here
-    // this.initializeGoogleSignIn();
+    // When the app starts, initialize Google Sign-In
+    this.initializeGoogleSignIn();
   }
 
   // --- PUBLIC API ---
 
   logout(): void {
     this.currentUser.set(null);
-    // In a real app, you would also sign out from Google
-    // google.accounts.id.disableAutoSelect();
+    // When logging out, also disable Google's automatic sign-in for the next visit.
+    if (typeof google !== 'undefined') {
+        google.accounts.id.disableAutoSelect();
+    }
   }
 
-  // --- SIMULATION METHODS (for development and testing) ---
+  // --- SIMULATION METHODS (for development) ---
 
   /**
-   * Simulates logging in as a specific role.
-   * In a real application, this logic would be replaced by the
-   * handleGoogleSignIn callback, which would verify the token
-   * with the backend (Apps Script) to determine the user's role.
+   * Simulates logging in as a specific role. This is for development purposes.
    */
   simulateLogin(role: UserRole): void {
-    let user: User | null = null;
-    switch(role) {
-      case 'Admin':
-        user = { name: 'Admin User', email: 'admin@example.com', role: 'Admin' };
-        break;
-      case 'Teacher':
-        // Log in as the first teacher in our mock data
-        user = { name: 'John Smith', email: 'teacher.john@example.com', role: 'Teacher', entityId: 'T-JSM45' };
-        break;
-      case 'Student':
-         // Log in as the first student in our mock data
-        user = { name: 'Charlie Brown', email: 'student.charlie@example.com', role: 'Student', entityId: 'S-ABC123' };
-        break;
+    if (this.GOOGLE_CLIENT_ID.startsWith('PASTE_YOUR')) {
+        let user: User | null = null;
+        switch(role) {
+          case 'Admin':
+            user = { name: 'Admin User', email: 'admin@example.com', role: 'Admin' };
+            break;
+          case 'Teacher':
+            // Log in as the first teacher in our mock data
+            user = { name: 'John Smith', email: 'teacher.john@example.com', role: 'Teacher', entityId: 'T-JSM45' };
+            break;
+          case 'Student':
+             // Log in as the first student in our mock data
+            user = { name: 'Charlie Brown', email: 'student.charlie@example.com', role: 'Student', entityId: 'S-ABC123' };
+            break;
+        }
+        this.currentUser.set(user);
+    } else {
+        // If a real client ID is configured, prompt for real sign-in
+        google.accounts.id.prompt();
     }
-    this.currentUser.set(user);
   }
 
 
-  // --- REAL GOOGLE SIGN-IN IMPLEMENTATION (for future reference) ---
+  // --- REAL GOOGLE SIGN-IN IMPLEMENTATION ---
 
   private initializeGoogleSignIn(): void {
-    if (typeof google === 'undefined') {
-        console.error("Google Identity Services script not loaded.");
+    if (this.GOOGLE_CLIENT_ID.startsWith('PASTE_YOUR')) {
+        console.warn('Google Client ID is not configured. Google Sign-In is disabled.');
+        return;
+    }
+    
+    if (typeof google === 'undefined' || typeof google.accounts === 'undefined') {
+        console.error("Google Identity Services script not loaded. Cannot initialize Sign-In.");
+        // Optionally, you could retry after a short delay
+        // setTimeout(() => this.initializeGoogleSignIn(), 1000);
         return;
     }
     
     google.accounts.id.initialize({
       client_id: this.GOOGLE_CLIENT_ID,
       callback: this.handleGoogleSignIn.bind(this),
-      auto_select: true
+      auto_select: false // Set to false to always show the prompt on first visit
     });
     
+    // This renders the "Sign in with Google" button.
+    // We will place a div with id="googleSignInButton" in the login component.
+    const signInButton = document.getElementById('googleSignInButton');
+    if (signInButton) {
+      google.accounts.id.renderButton(
+          signInButton,
+          { theme: 'outline', size: 'large', width: '300' } 
+      );
+    }
+    
+    // This will automatically prompt the user to sign in on subsequent visits if they haven't logged out.
     google.accounts.id.prompt();
   }
 
-  private async handleGoogleSignIn(response: any): Promise<void> {
+  private handleGoogleSignIn(response: any): void {
     const idToken = response.credential;
-    
-    // In a real app, you would send this token to your backend (Google Apps Script)
-    // to verify it and get the user's role and data.
-    
-    // Example POST request to your Apps Script Web App:
-    /*
-    const backendResponse = await fetch(this.WEB_APP_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action: 'verifyToken', token: idToken }),
-    });
-
-    const userData: User = await backendResponse.json();
-
-    if (userData && userData.role) {
-      this.currentUser.set(userData);
-    } else {
-      // Handle login failure (e.g., user not found in your system)
-      console.error("Login failed: User not recognized by the backend.");
-      this.currentUser.set(null);
-    }
-    */
-   
-    // For now, we'll just decode it on the client for demonstration
     const decodedToken: any = this.decodeJwt(idToken);
+    
+    // IMPORTANT: This is a simplified login for a frontend-only app.
+    // We check the email address to determine the role. In a real-world
+    // app with a backend, your server would verify the token and return the user's role.
+    let role: UserRole = 'Student'; // Default role
+    let entityId: string | undefined = undefined;
+
+    if (decodedToken.email === 'admin@example.com') { // Your admin's email
+        role = 'Admin';
+    } else if (decodedToken.email === 'teacher.john@example.com') { // Example teacher email
+        role = 'Teacher';
+        entityId = 'T-JSM45';
+    } else if (decodedToken.email === 'student.charlie@example.com') { // Example student email
+        role = 'Student';
+        entityId = 'S-ABC123';
+    } else {
+        // For any other Google account, we'll log them in as a default student for now.
+        role = 'Student';
+        entityId = 'S-DEF456'; // A generic student ID for unrecognized users.
+    }
+    
     const user: User = {
         name: decodedToken.name,
         email: decodedToken.email,
         picture: decodedToken.picture,
-        role: 'Student', // This would come from your backend
-        entityId: 'S-ABC123' // This would come from your backend
+        role: role,
+        entityId: entityId
     };
+
     this.currentUser.set(user);
   }
 
@@ -117,6 +133,7 @@ export class AuthService {
     try {
       return JSON.parse(atob(token.split('.')[1]));
     } catch (e) {
+      console.error('Error decoding JWT', e);
       return null;
     }
   }

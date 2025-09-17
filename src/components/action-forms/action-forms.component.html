@@ -13,6 +13,9 @@
       <button (click)="setForm('payment')" [class]="activeForm() === 'payment' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
         Log Payment
       </button>
+      <button (click)="setForm('assign')" [class]="activeForm() === 'assign' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+        Assign Task
+      </button>
     </nav>
   </div>
 
@@ -246,6 +249,60 @@
           </div>
         </div>
         <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Log Payment</button>
+      </form>
+    }
+    @case ('assign') {
+      <form (ngSubmit)="onAssignTask()" class="space-y-4">
+        <h4 class="text-md font-semibold text-slate-800">Assign a New Task</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="assignStudent" class="block text-sm font-medium text-slate-700">Student</label>
+            <select id="assignStudent" name="assignStudent" [(ngModel)]="assignmentModel().studentId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+              <option value="" disabled>Select a student</option>
+              @for (student of students(); track student.studentId) {
+                <option [value]="student.studentId">{{ student.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="assignTeacher" class="block text-sm font-medium text-slate-700">Assigning Teacher</label>
+            <select id="assignTeacher" name="assignTeacher" [(ngModel)]="assignmentModel().teacherId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+              <option value="" disabled>Select a teacher</option>
+              @for (teacher of teachers(); track teacher.teacherId) {
+                <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+            <label for="assignTitle" class="block text-sm font-medium text-slate-700">Title</label>
+            <input type="text" id="assignTitle" name="assignTitle" [(ngModel)]="assignmentModel().title" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md">
+        </div>
+        <div>
+            <label for="assignInstructions" class="block text-sm font-medium text-slate-700">Instructions</label>
+            <textarea id="assignInstructions" name="assignInstructions" rows="3" [(ngModel)]="assignmentModel().instructions" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-slate-300 rounded-md"></textarea>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="assignDueDate" class="block text-sm font-medium text-slate-700">Due Date</label>
+                <input type="date" id="assignDueDate" name="assignDueDate" [(ngModel)]="assignmentModel().dueDate" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md">
+            </div>
+            <div>
+                <label for="gradingSystem" class="block text-sm font-medium text-slate-700">Grading System</label>
+                <select id="gradingSystem" name="gradingSystem" [(ngModel)]="assignmentModel().gradingSystem" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="Points">Points</option>
+                    <option value="Percentage">Percentage</option>
+                    <option value="Letter Grade">Letter Grade</option>
+                </select>
+            </div>
+            @if (assignmentModel().gradingSystem === 'Points') {
+                <div>
+                    <label for="maxPoints" class="block text-sm font-medium text-slate-700">Max Points</label>
+                    <input type="number" id="maxPoints" name="maxPoints" min="1" [(ngModel)]="assignmentModel().maxPoints" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md">
+                </div>
+            }
+        </div>
+        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Create Assignment</button>
       </form>
     }
   }

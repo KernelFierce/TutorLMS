@@ -435,6 +435,24 @@ export class TutorDataService {
     this.payments.update(payments => [...payments, newPayment]);
   }
 
+  createAssignment(assignmentData: { 
+    studentId: string; 
+    teacherId: string; 
+    title: string; 
+    instructions: string; 
+    dueDate: string; 
+    gradingSystem: 'Points' | 'Percentage' | 'Letter Grade';
+    maxPoints?: number;
+  }): void {
+    const newAssignment: Assignment = {
+        assignmentId: `A-${this.generateId()}`,
+        status: 'Assigned',
+        notificationSent: false,
+        ...assignmentData
+    };
+    this.assignments.update(assignments => [...assignments, newAssignment]);
+  }
+
   convertLeadToStudent(leadId: string): string {
     const lead = this.leads().find(l => l.id === leadId);
     if (!lead) return '';

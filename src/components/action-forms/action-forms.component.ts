@@ -1,4 +1,5 @@
 
+
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +15,7 @@ import { Lead, RecurrenceRule } from '../../models';
 export class ActionFormsComponent {
   private tutorService = inject(TutorDataService);
   
-  activeForm = signal<'session' | 'class' | 'demo' | 'payment'>('session');
+  activeForm = signal<'session' | 'class' | 'demo' | 'payment' | 'assign'>('session');
   
   // Expose service signals to the template
   students = this.tutorService.activeStudents;
@@ -61,13 +62,22 @@ export class ActionFormsComponent {
 
   demoModel = signal({ leadId: '', teacherId: '', date: new Date().toISOString().split('T')[0], startTime: '12:00' });
   paymentModel = signal({ studentId: '', paymentDate: new Date().toISOString().split('T')[0], amount: 0, currency: 'USD' });
+  assignmentModel = signal({
+    studentId: '',
+    teacherId: '',
+    title: '',
+    instructions: '',
+    dueDate: new Date().toISOString().split('T')[0],
+    gradingSystem: 'Points' as const,
+    maxPoints: 100
+  });
 
   selectedLead = computed(() => {
     const leadId = this.demoModel().leadId;
     return this.leads().find(l => l.id === leadId);
   });
 
-  setForm(form: 'session' | 'class' | 'demo' | 'payment'): void {
+  setForm(form: 'session' | 'class' | 'demo' | 'payment' | 'assign'): void {
     this.activeForm.set(form);
   }
 
@@ -155,6 +165,25 @@ export class ActionFormsComponent {
       alert('Payment logged successfully!');
     } else {
       alert('Please select a student and enter a valid amount.');
+    }
+  }
+
+  onAssignTask(): void {
+    const taskData = this.assignmentModel();
+    if (taskData.studentId && taskData.teacherId && taskData.title && taskData.dueDate) {
+        this.tutorService.createAssignment(taskData);
+        this.assignmentModel.set({
+            studentId: '',
+            teacherId: '',
+            title: '',
+            instructions: '',
+            dueDate: new Date().toISOString().split('T')[0],
+            gradingSystem: 'Points' as const,
+            maxPoints: 100
+        });
+        alert('Assignment created successfully!');
+    } else {
+        alert('Please fill all required assignment fields.');
     }
   }
   
