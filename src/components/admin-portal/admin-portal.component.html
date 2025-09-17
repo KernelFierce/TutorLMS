@@ -1,0 +1,375 @@
+<div class="flex h-screen font-sans">
+  <!-- Sidebar Navigation -->
+  <nav class="w-64 bg-slate-800 text-white flex flex-col">
+    <div class="flex items-center justify-center h-20 border-b border-slate-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 6.75h4.5v10.5h-4.5z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.753l-4.243-4.243m8.486 0L12 18.753" />
+      </svg>
+      <h1 class="text-2xl font-bold ml-3">TutorHub</h1>
+    </div>
+    <ul class="flex-grow p-4 space-y-2 custom-scrollbar">
+      <li>
+        <button (click)="setView('dashboard')" [class]="activeView() === 'dashboard' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('master-schedule')" [class]="activeView() === 'master-schedule' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          Master Schedule
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('students')" [class]="activeView() === 'students' || activeView() === 'student-profile' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          Students
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('teachers')" [class]="activeView() === 'teachers' || activeView() === 'teacher-profile' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          Teachers
+        </button>
+      </li>
+       <li>
+        <button (click)="setView('assignments')" [class]="activeView() === 'assignments' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+          Assignments
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('student-attendance')" [class]="activeView() === 'student-attendance' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-4.67c.12-.24.232-.487.335-.737m-3.058 3.07a6.375 6.375 0 00-7.533-2.493 3.375 3.375 0 016.75 0c.335.242.63.532.887.853z" /></svg>
+          Student Attendance
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('teacher-attendance')" [class]="activeView() === 'teacher-attendance' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+          Teacher Attendance
+        </button>
+      </li>
+       <li>
+        <button (click)="setView('reschedule-requests')" [class]="activeView() === 'reschedule-requests' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h28.5" /></svg>
+          Reschedule Requests
+        </button>
+      </li>
+       <li>
+        <button (click)="setView('cancellation-requests')" [class]="activeView() === 'cancellation-requests' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+          Cancellation Requests
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('leads')" [class]="activeView() === 'leads' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          Leads
+        </button>
+      </li>
+      <li>
+        <button (click)="setView('messages')" [class]="activeView() === 'messages' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          Messages
+        </button>
+      </li>
+    </ul>
+     <div class="mt-auto p-4 border-t border-slate-700">
+        <button (click)="onLogout()" class="flex items-center w-full px-4 py-3 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200">
+            <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            Logout
+        </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 bg-slate-100 overflow-y-auto">
+    <div class="p-8">
+      @switch (activeView()) {
+        @case ('dashboard') {
+          <!-- Header -->
+          <header class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-800">{{ getGreeting() }}, {{ currentUser()?.name }}!</h2>
+            <p class="text-slate-500 mt-1">Here's your summary for today.</p>
+          </header>
+          <div class="space-y-8">
+            <!-- Financial Overview -->
+            <section>
+              <h3 class="text-xl font-semibold text-slate-700 mb-4">Financial Overview</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @let overview = financialOverview();
+                <div class="bg-white p-6 rounded-lg shadow-md flex items-center">
+                  <div class="bg-green-100 text-green-600 rounded-full p-3"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div>
+                  <div class="ml-4">
+                    <p class="text-sm text-slate-500">Total Revenue</p>
+                    <p class="text-2xl font-bold text-slate-800">${{ overview.totalRevenue.toFixed(2) }}</p>
+                  </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md flex items-center">
+                  <div class="bg-red-100 text-red-600 rounded-full p-3"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                  <div class="ml-4">
+                    <p class="text-sm text-slate-500">Total Outstanding</p>
+                    <p class="text-2xl font-bold text-slate-800">${{ overview.totalOutstanding.toFixed(2) }}</p>
+                  </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md flex items-center">
+                  <div class="bg-blue-100 text-blue-600 rounded-full p-3"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div>
+                  <div class="ml-4">
+                    <p class="text-sm text-slate-500">Active Clients</p>
+                    <p class="text-2xl font-bold text-slate-800">{{ overview.activeClients }}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div class="lg:col-span-2">
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">Command Center</h3>
+                <app-action-forms></app-action-forms>
+              </div>
+              <section>
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">Today's Agenda</h3>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                  @if(todaysAgenda().length > 0) {
+                    <ul class="space-y-4">
+                      @for (item of todaysAgenda(); track item.title) {
+                        <li class="flex items-start" [class.opacity-50]="item.status === 'Canceled'">
+                          <div class="flex-1 flex items-center">
+                            <div [class]="item.type === 'Class' ? 'bg-green-500' : 'bg-blue-500'" class="w-3 h-3 rounded-full mt-1.5 mr-4 flex-shrink-0"></div>
+                            <div>
+                              <p class="font-medium text-slate-800" [class.line-through]="item.status === 'Canceled'">{{ item.title }}</p>
+                              <p class="text-sm text-slate-500">{{ item.details }}</p>
+                            </div>
+                          </div>
+                          <div class="flex items-center flex-shrink-0 ml-4">
+                            @if (item.status === 'Canceled') {
+                                <span class="text-sm font-semibold text-red-600 whitespace-nowrap">Canceled</span>
+                            } @else if (item.status === 'Pending Confirmation') {
+                                <span class="text-sm font-semibold text-yellow-600 whitespace-nowrap">Pending</span>
+                            } @else {
+                                @if(item.time) {
+                                <span class="text-sm font-semibold text-indigo-600 whitespace-nowrap">{{ item.time }}</span>
+                                }
+                                @if(item.meetLink) {
+                                <a [href]="item.meetLink" target="_blank" rel="noopener noreferrer" class="ml-4 inline-flex items-center px-2.5 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Join
+                                </a>
+                                }
+                            }
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="text-slate-500 text-center py-4">No scheduled items for today.</p>
+                  }
+                </div>
+              </section>
+            </div>
+          </div>
+        }
+        @case('master-schedule') {
+          <header class="mb-4">
+            <h2 class="text-2xl font-bold text-slate-800">Master Schedule</h2>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white rounded-lg shadow-sm">
+                <div class="flex-1">
+                    <label for="teacherFilter" class="block text-sm font-medium text-slate-700">Filter by Teacher</label>
+                    <select id="teacherFilter" (change)="selectedTeacherId.set($any($event.target).value)" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="all">All Teachers</option>
+                        @for (teacher of teachers(); track teacher.teacherId) {
+                            <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label for="studentFilter" class="block text-sm font-medium text-slate-700">Filter by Student</label>
+                    <select id="studentFilter" (change)="selectedStudentId.set($any($event.target).value)" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="all">All Students</option>
+                        @for (student of allStudents(); track student.studentId) {
+                            <option [value]="student.studentId">{{ student.name }}</option>
+                        }
+                    </select>
+                </div>
+                 <div class="flex-1">
+                    <label for="tzFilter" class="block text-sm font-medium text-slate-700">View in Timezone</label>
+                    <select id="tzFilter" (change)="selectedMasterTimezone.set($any($event.target).value)" [value]="selectedMasterTimezone()" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        @for(tz of timezones(); track tz) {
+                           <option [value]="tz">{{ tz }}</option>
+                        }
+                    </select>
+                </div>
+            </div>
+          </header>
+          <app-schedule-view [sessions]="filteredSchedule()"></app-schedule-view>
+        }
+        @case ('students') {
+          <header class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-800">Student Management</h2>
+            <div class="flex space-x-1 bg-slate-200 p-1 rounded-lg">
+              <button (click)="studentStatusFilter.set('All')" [class]="studentStatusFilter() === 'All' ? 'bg-white shadow' : ''" class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md">All</button>
+              <button (click)="studentStatusFilter.set('Active')" [class]="studentStatusFilter() === 'Active' ? 'bg-white shadow' : ''" class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md">Active</button>
+              <button (click)="studentStatusFilter.set('Inactive')" [class]="studentStatusFilter() === 'Inactive' ? 'bg-white shadow' : ''" class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md">Inactive</button>
+            </div>
+          </header>
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <table class="w-full text-sm text-left text-slate-500">
+              <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3">Student Name</th>
+                  <th scope="col" class="px-6 py-3">Status</th>
+                  <th scope="col" class="px-6 py-3">Hourly Rate</th>
+                  <th scope="col" class="px-6 py-3">Account Status</th>
+                  <th scope="col" class="px-6 py-3">Alert</th>
+                  <th scope="col" class="px-6 py-3">Reminder Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (student of filteredStudents(); track student.studentId) {
+                  <tr [class]="student.financials.outstandingBalance > 0 ? 'bg-red-50' : student.financials.alert === 'LOW CREDIT' ? 'bg-yellow-50' : 'bg-white'" class="border-b hover:bg-slate-50">
+                    <td class="px-6 py-4 font-medium text-slate-900">
+                       <a (click)="viewProfile({id: student.studentId, role: 'Student'})" class="cursor-pointer hover:underline text-indigo-600">{{ student.name }}</a>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span [class]="student.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                        {{ student.status }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4">${{ student.hourlyRate.toFixed(2) }}</td>
+                    <td class="px-6 py-4 font-medium" [class]="student.financials.outstandingBalance > 0 ? 'text-red-600' : student.financials.outstandingBalance < 0 ? 'text-green-600' : 'text-slate-600'">
+                        {{ student.financials.accountStatus }}
+                    </td>
+                    <td class="px-6 py-4">
+                      @if(student.financials.alert) {
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ student.financials.alert }}</span>
+                      }
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        @if (student.financials.outstandingBalance > 0) {
+                            @if (!student.paymentReminderStatus) {
+                            <button (click)="queueReminder(student.studentId)" class="font-medium text-blue-600 hover:text-blue-900">Queue Reminder</button>
+                            } @else if (student.paymentReminderStatus === 'Queued') {
+                            <button (click)="approveReminder(student.studentId)" class="font-medium text-green-600 hover:text-green-900">Approve & Send</button>
+                            } @else if (student.paymentReminderStatus === 'Sent') {
+                            <span class="text-slate-500">Sent</span>
+                            }
+                        }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @case('student-profile') {
+           @if (selectedStudentProfile(); as profile) {
+                <app-student-profile 
+                    [student]="profile.student"
+                    [schedule]="profile.schedule"
+                    [assignments]="profile.assignments"
+                    [attendance]="profile.attendance"
+                    [lessonPlans]="profile.lessonPlans"
+                    (back)="setView('students')"
+                ></app-student-profile>
+            }
+        }
+        @case('teachers') {
+          <h2 class="text-2xl font-bold text-slate-800 mb-6">Teacher Roster</h2>
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+             <table class="w-full text-sm text-left text-slate-500">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3">Teacher Name</th>
+                    <th scope="col" class="px-6 py-3">Email</th>
+                    <th scope="col" class="px-6 py-3">Time Zone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (teacher of teachers(); track teacher.teacherId) {
+                    <tr class="bg-white border-b hover:bg-slate-50">
+                      <td class="px-6 py-4 font-medium text-slate-900">
+                        <a (click)="viewProfile({id: teacher.teacherId, role: 'Teacher'})" class="cursor-pointer hover:underline text-indigo-600">{{ teacher.name }}</a>
+                      </td>
+                      <td class="px-6 py-4">{{ teacher.email }}</td>
+                      <td class="px-6 py-4">{{ teacher.timeZone }}</td>
+                    </tr>
+                  }
+                </tbody>
+            </table>
+          </div>
+        }
+        @case('teacher-profile') {
+           @if (selectedTeacherProfile(); as profile) {
+                <app-teacher-profile 
+                    [profileData]="profile"
+                    (back)="setView('teachers')"
+                ></app-teacher-profile>
+            }
+        }
+        @case ('assignments') {
+          <h2 class="text-2xl font-bold text-slate-800 mb-6">Master Assignments Log</h2>
+          <app-assignments-view></app-assignments-view>
+        }
+        @case('student-attendance') {
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Student Attendance Report</h2>
+            <app-attendance-report [data]="studentAttendance()" reportType="Student" (viewProfile)="viewProfile($event)"></app-attendance-report>
+        }
+         @case('teacher-attendance') {
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Teacher Attendance Report</h2>
+            <app-attendance-report [data]="teacherAttendance()" reportType="Teacher" (viewProfile)="viewProfile($event)"></app-attendance-report>
+        }
+        @case('reschedule-requests') {
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Reschedule Requests</h2>
+            <app-reschedule-view></app-reschedule-view>
+        }
+        @case('cancellation-requests') {
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Cancellation Requests</h2>
+            <app-cancellation-requests-view [requests]="cancellationRequests()"></app-cancellation-requests-view>
+        }
+        @case ('leads') {
+          <h2 class="text-2xl font-bold text-slate-800 mb-6">Lead Management</h2>
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <table class="w-full text-sm text-left text-slate-500">
+              <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3">Lead Name</th>
+                  <th scope="col" class="px-6 py-3">Email</th>
+                  <th scope="col" class="px-6 py-3">Subject</th>
+                  <th scope="col" class="px-6 py-3">Status</th>
+                  <th scope="col" class="px-6 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lead of leads(); track lead.id) {
+                  <tr class="bg-white border-b hover:bg-slate-50">
+                    <td class="px-6 py-4 font-medium text-slate-900">{{ lead.name }}</td>
+                    <td class="px-6 py-4">{{ lead.contactEmail }}</td>
+                    <td class="px-6 py-4">{{ lead.subjectOfInterest }}</td>
+                    <td class="px-6 py-4">
+                      <span [class]="lead.status === 'New' ? 'bg-blue-100 text-blue-800' : lead.status === 'Converted' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                        {{ lead.status }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4">
+                      @if(lead.status !== 'Converted' && lead.status !== 'Closed') {
+                        <button (click)="convertLead(lead.id)" class="font-medium text-indigo-600 hover:text-indigo-900">Convert</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @case('messages') {
+          <h2 class="text-2xl font-bold text-slate-800 mb-6">Monitor Conversations</h2>
+          <div class="h-[calc(100vh-12rem)]">
+             <app-messaging-view></app-messaging-view>
+          </div>
+        }
+      }
+    </div>
+  </main>
+</div>

@@ -1,0 +1,37 @@
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+  <table class="w-full text-sm text-left text-slate-500">
+    <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+      <tr>
+        <th scope="col" class="px-6 py-3">{{ reportType() }} Name</th>
+        <th scope="col" class="px-6 py-3 text-center">Attended</th>
+        <th scope="col" class="px-6 py-3 text-center">Student No-Shows</th>
+        <th scope="col" class="px-6 py-3 text-center">Teacher No-Shows</th>
+        <th scope="col" class="px-6 py-3 text-center">Attendance Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of data(); track item.id) {
+        <tr class="bg-white border-b hover:bg-slate-50">
+          <td class="px-6 py-4 font-medium text-slate-900">
+            <a (click)="onViewProfile(item.id)" class="cursor-pointer hover:underline text-indigo-600">
+              {{ item.name }}
+            </a>
+          </td>
+          <td class="px-6 py-4 text-center">{{ item.totalCompleted }}</td>
+          <td class="px-6 py-4 text-center">{{ item.totalStudentNoShow }}</td>
+          <td class="px-6 py-4 text-center">{{ item.totalTeacherNoShow }}</td>
+          <td class="px-6 py-4 text-center font-bold" [class]="getRateColor(item.attendanceRate)">
+            {{ item.attendanceRate.toFixed(1) }}%
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="text-center p-8 text-slate-500">
+            <h3 class="mt-2 text-sm font-medium text-slate-900">No Data Available</h3>
+            <p class="mt-1 text-sm text-slate-500">There is no attendance data to display for this report.</p>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

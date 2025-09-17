@@ -1,0 +1,103 @@
+@if (profileData(); as profile) {
+<div class="space-y-8">
+    <!-- Profile Header -->
+    <header class="flex items-start justify-between">
+        <div>
+            <div class="flex items-center">
+                 <button (click)="onBack()" class="mr-4 text-slate-500 hover:text-slate-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                 </button>
+                 @if (!isEditMode()) {
+                    <h2 class="text-3xl font-bold text-slate-800">{{ profile.teacher.name }}'s Profile</h2>
+                 } @else {
+                    <input type="text" [(ngModel)]="editableTeacher().name" class="text-3xl font-bold text-slate-800 border-b-2 border-indigo-500 bg-transparent -m-1 p-1"/>
+                 }
+            </div>
+            <p class="text-slate-500 mt-1 ml-10">A complete overview of the teacher's activities.</p>
+        </div>
+        <div>
+            @if(currentUser()?.role === 'Admin') {
+                @if (!isEditMode()) {
+                    <button (click)="toggleEditMode()" class="inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">Edit Profile</button>
+                } @else {
+                    <div class="flex space-x-2">
+                        <button (click)="saveChanges()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Save</button>
+                        <button (click)="toggleEditMode()" class="inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">Cancel</button>
+                    </div>
+                }
+            }
+        </div>
+    </header>
+
+    <!-- Key Info Cards -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="font-semibold text-slate-700 mb-2">Contact & Info</h3>
+            @if (!isEditMode()) {
+                <p class="text-sm text-slate-600"><strong>Email:</strong> {{ profile.teacher.email }}</p>
+                <p class="text-sm text-slate-600"><strong>Timezone:</strong> {{ profile.teacher.timeZone }}</p>
+            } @else {
+                <div class="space-y-2 text-sm">
+                    <div><label class="font-bold">Email:</label><input type="email" [(ngModel)]="editableTeacher().email" class="w-full border-b p-1"/></div>
+                    <div><label class="font-bold">Timezone:</label><input type="text" [(ngModel)]="editableTeacher().timeZone" class="w-full border-b p-1"/></div>
+                </div>
+            }
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="font-semibold text-slate-700 mb-2">Attendance Summary</h3>
+            <p class="text-2xl font-bold" [class]="getAttendanceRateColor(profile.attendance.attendanceRate)">{{ profile.attendance.attendanceRate.toFixed(1) }}%</p>
+            <p class="text-sm text-slate-500">Attended: {{ profile.attendance.totalCompleted }} | Missed: {{ profile.attendance.totalTeacherNoShow }}</p>
+        </div>
+    </section>
+
+    <!-- Detailed Tabs -->
+    <section>
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button (click)="activeTab.set('students')" [class]="activeTab() === 'students' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Assigned Students</button>
+                <button (click)="activeTab.set('attendance')" [class]="activeTab() === 'attendance' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Full Attendance Report</button>
+            </nav>
+        </div>
+
+        <div class="mt-6">
+            @switch(activeTab()) {
+                @case('students') {
+                     <div class="bg-white rounded-lg shadow-md max-h-96 overflow-y-auto">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-50 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Name</th>
+                                    <th scope="col" class="px-6 py-3">Status</th>
+                                    <th scope="col" class="px-6 py-3">Timezone</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                @for (student of profile.assignedStudents; track student.studentId) {
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-6 py-4 font-medium text-slate-900">{{ student.name }}</td>
+                                        <td class="px-6 py-4">
+                                            <span [class]="student.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                            {{ student.status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">{{ student.timeZone }}</td>
+                                    </tr>
+                                } @empty {
+                                    <tr><td colspan="3" class="text-center p-8 text-slate-500">No students assigned.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @case('attendance') {
+                   <app-attendance-report [data]="[profile.attendance]" reportType="Teacher"></app-attendance-report>
+                }
+            }
+        </div>
+    </section>
+</div>
+} @else {
+    <p>Loading teacher profile...</p>
+}

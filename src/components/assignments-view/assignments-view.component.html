@@ -1,0 +1,138 @@
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+  <table class="w-full text-sm text-left text-slate-500">
+    <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+      <tr>
+        <th scope="col" class="px-6 py-3">Title</th>
+        @if (currentUser()?.role === 'Admin') {
+          <th scope="col" class="px-6 py-3">Student</th>
+          <th scope="col" class="px-6 py-3">Teacher</th>
+        }
+        @if (currentUser()?.role === 'Teacher') {
+          <th scope="col" class="px-6 py-3">Student</th>
+        }
+        @if (currentUser()?.role === 'Student') {
+          <th scope="col" class="px-6 py-3">Teacher</th>
+        }
+        <th scope="col" class="px-6 py-3">Due Date</th>
+        <th scope="col" class="px-6 py-3">Submitted On</th>
+        <th scope="col" class="px-6 py-3">Status</th>
+        <th scope="col" class="px-6 py-3">Grade</th>
+        <th scope="col" class="px-6 py-3">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (assignment of assignments(); track assignment.assignmentId) {
+        <tr class="bg-white border-b hover:bg-slate-50">
+          <td class="px-6 py-4 font-medium text-slate-900">
+              <p>{{ assignment.title }}</p>
+              @if (assignment.feedback && currentUser()?.role === 'Student') {
+                 <p class="text-xs text-slate-500 mt-1 italic"><strong>Feedback:</strong> {{ assignment.feedback }}</p>
+              }
+          </td>
+          
+          @if (currentUser()?.role === 'Admin') {
+            <td class="px-6 py-4">{{ assignment.studentName }}</td>
+            <td class="px-6 py-4">{{ assignment.teacherName }}</td>
+          }
+          @if (currentUser()?.role === 'Teacher') {
+            <td class="px-6 py-4">{{ assignment.studentName }}</td>
+          }
+          @if (currentUser()?.role === 'Student') {
+            <td class="px-6 py-4">{{ assignment.teacherName }}</td>
+          }
+
+          <td class="px-6 py-4">{{ assignment.dueDate }}</td>
+          <td class="px-6 py-4">{{ assignment.submissionDate || '---' }}</td>
+          <td class="px-6 py-4">
+            <span [class]="getStatusColor(assignment.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+              {{ assignment.status }}
+            </span>
+             @if (assignment.isLate) {
+                <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Late</span>
+            }
+          </td>
+          <td class="px-6 py-4 font-bold text-slate-700">
+            {{ assignment.grade || 'N/A' }}
+            @if(assignment.gradingSystem === 'Points' && assignment.maxPoints) {
+                <span class="text-xs font-normal text-slate-500"> / {{assignment.maxPoints}}</span>
+            }
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div class="flex items-center space-x-4">
+                @if (currentUser()?.role === 'Student' && assignment.status === 'Assigned') {
+                    <label class="font-medium text-indigo-600 hover:text-indigo-900 cursor-pointer">
+                        <span>Submit Work</span>
+                        <input type="file" class="hidden" (change)="onFileSelected($event, assignment.assignmentId)">
+                    </label>
+                }
+                @if (assignment.status === 'Submitted' || assignment.status === 'Graded') {
+                    @if (assignment.submissionFileName) {
+                        <a (click)="viewSubmission(assignment)" class="font-medium text-blue-600 hover:text-blue-900 cursor-pointer">View</a>
+                    }
+                }
+                @if ((currentUser()?.role === 'Teacher' || currentUser()?.role === 'Admin')) {
+                    @if (assignment.status === 'Submitted') {
+                        <button (click)="openGradeModal(assignment)" class="font-medium text-green-600 hover:text-green-900">Grade</button>
+                    }
+                    @if (assignment.status === 'Graded') {
+                        <button (click)="openGradeModal(assignment)" class="font-medium text-yellow-600 hover:text-yellow-900">Edit Grade</button>
+                    }
+                    @if (assignment.status === 'Assigned') {
+                        @if (!assignment.notificationSent) {
+                            <button (click)="sendNotification(assignment.assignmentId)" class="font-medium text-blue-600 hover:text-blue-900">Notify</button>
+                        } @else {
+                            <span class="text-xs text-slate-500">Notified</span>
+                        }
+                    }
+                }
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+            <td colspan="8" class="text-center p-8 text-slate-500">
+                <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-slate-900">No Assignments Found</h3>
+                <p class="mt-1 text-sm text-slate-500">There are no assignments to display for this view.</p>
+            </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Grade Assignment Modal -->
+@if (isGradeModalOpen() && gradingAssignment(); as assignment) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center" (click)="closeGradeModal()">
+    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg m-4" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Grade Assignment for {{ assignment.studentName }}</h3>
+      <p class="text-sm text-slate-600 mb-4"><strong>Title:</strong> {{ assignment.title }}</p>
+
+      <form (ngSubmit)="saveGrade()" class="space-y-4">
+          <div>
+            <label for="grade" class="block text-sm font-medium text-slate-700">Grade</label>
+            <div class="flex items-center mt-1">
+              <input id="grade" name="grade" type="text" [(ngModel)]="gradeModel().grade" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-slate-300 rounded-md">
+              @if (assignment.gradingSystem === 'Points') {
+                <span class="ml-2 text-slate-500 text-sm">/ {{ assignment.maxPoints }}</span>
+              }
+               @if (assignment.gradingSystem === 'Percentage') {
+                <span class="ml-2 text-slate-500 text-sm">%</span>
+              }
+            </div>
+          </div>
+          <div>
+            <label for="feedback" class="block text-sm font-medium text-slate-700">Feedback</label>
+            <textarea id="feedback" name="feedback" rows="4" [(ngModel)]="gradeModel().feedback" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-slate-300 rounded-md"></textarea>
+          </div>
+
+          <div class="mt-6 flex justify-end space-x-3">
+              <button type="button" (click)="closeGradeModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium">Save Grade</button>
+          </div>
+      </form>
+    </div>
+  </div>
+}

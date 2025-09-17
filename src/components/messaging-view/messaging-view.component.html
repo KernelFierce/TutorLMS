@@ -1,0 +1,90 @@
+<div class="bg-white rounded-lg shadow-md h-full flex overflow-hidden">
+  @if(currentUser()?.role !== 'Student') {
+    <!-- Conversation List (For Admin/Teacher) -->
+    <aside class="w-1/3 border-r border-slate-200 overflow-y-auto">
+      <div class="p-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800">Conversations</h2>
+      </div>
+      <ul class="divide-y divide-slate-200">
+        @for (convo of conversations(); track convo.id) {
+          <li (click)="selectConversation(convo.id)" [class]="activeConversationId() === convo.id ? 'bg-indigo-50' : 'hover:bg-slate-50'" class="p-4 cursor-pointer transition-colors duration-150">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold text-slate-900">
+                @if(currentUser()?.role === 'Admin') {
+                  {{ convo.studentName }} / {{ convo.teacherName }}
+                } @else {
+                  {{ convo.studentName }}
+                }
+              </p>
+              <span class="text-xs text-slate-400">{{ convo.lastMessageTimestamp | date:'shortTime' }}</span>
+            </div>
+            <p class="text-sm text-slate-500 truncate mt-1">{{ convo.lastMessageText }}</p>
+          </li>
+        } @empty {
+           <p class="p-6 text-sm text-slate-500 text-center">No conversations yet.</p>
+        }
+      </ul>
+    </aside>
+  }
+
+  <!-- Chat Window -->
+  <main [class]="currentUser()?.role === 'Student' ? 'w-full' : 'w-2/3'" class="flex flex-col">
+    @if (activeConversation(); as convo) {
+      <!-- Chat Header -->
+      <header class="flex-shrink-0 flex items-center p-4 border-b border-slate-200">
+        <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
+          <span class="font-bold text-slate-600">
+            @if(currentUser()?.role === 'Student') {
+              {{ convo.teacherName.charAt(0) }}
+            } @else {
+              {{ convo.studentName.charAt(0) }}
+            }
+          </span>
+        </div>
+        <div>
+           <h3 class="font-semibold text-slate-800">
+             @if(currentUser()?.role === 'Student') {
+                {{ convo.teacherName }}
+              } @else {
+                {{ convo.studentName }}
+              }
+           </h3>
+        </div>
+      </header>
+      
+      <!-- Messages -->
+      <div #scrollContainer class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50">
+        @for (msg of currentMessages(); track msg.messageId) {
+          <div class="flex" [class.justify-end]="msg.isCurrentUser">
+            <div class="max-w-xs lg:max-w-md">
+              <div [class]="msg.isCurrentUser ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-800'" class="rounded-lg px-4 py-2">
+                <p class="text-sm">{{ msg.text }}</p>
+              </div>
+              <p class="text-xs text-slate-400 mt-1" [class.text-right]="msg.isCurrentUser">
+                {{ msg.senderName }} &middot; {{ msg.timestamp | date:'shortTime' }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Message Input -->
+      <footer class="flex-shrink-0 p-4 border-t border-slate-200 bg-white">
+        <form (ngSubmit)="sendMessage()" class="flex items-center space-x-3">
+          <input type="text" [(ngModel)]="newMessage" name="newMessage" placeholder="Type a message..." class="flex-1 block w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          <button type="submit" [disabled]="!newMessage().trim()" class="inline-flex items-center justify-center p-2 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed">
+            <svg class="h-6 w-6 transform rotate-90" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+          </button>
+        </form>
+      </footer>
+    } @else {
+      <div class="flex-1 flex items-center justify-center bg-slate-50">
+        <div class="text-center">
+            <svg class="mx-auto h-12 w-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
+            <h3 class="mt-2 text-sm font-medium text-slate-900">Select a conversation</h3>
+            <p class="mt-1 text-sm text-slate-500">Choose a conversation from the list to start chatting.</p>
+        </div>
+      </div>
+    }
+  </main>
+</div>

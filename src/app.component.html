@@ -1,0 +1,17 @@
+<div class="h-screen w-screen">
+  @if (!isAuthenticated()) {
+    <app-login></app-login>
+  } @else {
+    @switch (currentUser()?.role) {
+      @case ('Admin') {
+        <app-admin-portal (logout)="logout()"></app-admin-portal>
+      }
+      @case ('Teacher') {
+        <app-teacher-portal (logout)="logout()"></app-teacher-portal>
+      }
+      @case ('Student') {
+        <app-student-portal (logout)="logout()"></app-student-portal>
+      }
+    }
+  }
+</div>

@@ -1,0 +1,46 @@
+<div class="bg-white rounded-lg shadow-md p-6">
+  <div class="mb-4">
+    <h2 class="text-xl font-semibold text-slate-800">My Weekly Availability</h2>
+    <p class="text-sm text-slate-500">Click on a time slot to mark it as available or unavailable. All times are shown in your local timezone.</p>
+  </div>
+
+  <div class="flex border-t border-b border-slate-200">
+    <!-- Time Column -->
+    <div class="w-24 flex-shrink-0 border-r border-slate-200">
+      <div class="h-12 flex items-center justify-center font-semibold text-sm text-slate-600">Time</div>
+       @for(slot of timeSlots()[0]?.slots; track slot.hour) {
+        <div class="h-12 flex items-center justify-center text-xs text-slate-500 border-t border-slate-200">{{ slot.label }}</div>
+      }
+    </div>
+
+    <!-- Day Columns -->
+    <div class="flex-grow grid grid-cols-7">
+      @for(day of timeSlots(); track day.dateString) {
+        <div class="flex flex-col">
+          <div class="h-12 flex flex-col items-center justify-center font-semibold text-sm text-slate-600 border-r border-slate-200">
+            <span>{{ day.date | date:'EEE' }}</span>
+            <span class="text-xs font-normal text-slate-400">{{ day.date | date:'MMM d' }}</span>
+          </div>
+          @for(slot of day.slots; track slot.hour) {
+            <div 
+              (click)="toggleAvailability(day.dateString, slot)"
+              class="h-12 border-t border-r border-slate-200 transition-colors duration-150"
+              [class.bg-green-100]="slot.status === 'available'"
+              [class.bg-slate-400]="slot.status === 'booked'"
+              [class.hover:bg-green-200]="slot.status === 'unavailable'"
+              [class.hover:bg-red-100]="slot.status === 'available'"
+              [class.cursor-pointer]="slot.status !== 'booked'"
+              [class.cursor-not-allowed]="slot.status === 'booked'">
+              
+               @if (slot.status === 'booked') {
+                  <div class="w-full h-full bg-slate-400 flex items-center justify-center">
+                      <span class="text-xs font-bold text-white">BOOKED</span>
+                  </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

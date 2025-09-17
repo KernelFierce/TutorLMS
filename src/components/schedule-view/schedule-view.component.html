@@ -1,0 +1,108 @@
+<div class="bg-white rounded-lg shadow-md">
+  @if (sessions().length > 0) {
+    <div class="divide-y divide-slate-200">
+      @for (group of groupedSessions(); track group.date) {
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-slate-800">{{ group.day }}
+            <span class="text-sm font-normal text-slate-500 ml-2">{{ group.date }}</span>
+          </h3>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            @for (session of group.sessions; track session.classId) {
+              <div class="border border-slate-200 rounded-lg p-4 flex flex-col justify-between" 
+                [class.bg-slate-50]="session.status !== 'Scheduled'">
+                <div class="flex-grow">
+                  <div class="flex justify-between items-start">
+                    <p class="font-bold text-slate-800" [class.line-through]="session.status === 'Canceled'">
+                      @if (currentUser()?.role === 'Student') {
+                        {{ session.teacherName }}
+                      } @else {
+                        {{ session.studentName }}
+                      }
+                    </p>
+                    <span class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full whitespace-nowrap">
+                      {{ session.localTime }} {{ session.localTimeZone }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-slate-600 mt-2">
+                    {{ session.topicsCovered }}
+                  </p>
+                </div>
+
+                <!-- Status Badge -->
+                 <div class="mt-4 text-center">
+                    @switch (session.status) {
+                        @case('Completed') { <span class="text-xs font-bold uppercase text-green-600">Completed</span> }
+                        @case('Canceled') { <span class="text-xs font-bold uppercase text-red-600">Canceled</span> }
+                        @case('Student No Show') { <span class="text-xs font-bold uppercase text-yellow-600">Student No Show</span> }
+                        @case('Teacher No Show') { <span class="text-xs font-bold uppercase text-orange-600">Teacher No Show</span> }
+                        @case('Reschedule Pending') { <span class="text-xs font-bold uppercase text-blue-600">Reschedule Pending</span> }
+                        @case('Cancellation Pending') { <span class="text-xs font-bold uppercase text-purple-600">Cancellation Pending</span> }
+                    }
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-4 pt-3 border-t border-slate-200 space-y-2">
+                  @if (session.status === 'Scheduled') {
+                    @if (session.isPast) {
+                        <!-- Past Scheduled Actions (Attendance) -->
+                        @if (currentUser()?.role === 'Admin' || currentUser()?.role === 'Teacher') {
+                            <div class="grid grid-cols-1 gap-2">
+                               <button (click)="updateStatus(session.classId, 'Completed')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Mark Completed</button>
+                               <div class="grid grid-cols-2 gap-2">
+                                 <button (click)="updateStatus(session.classId, 'Student No Show')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600">Student No-Show</button>
+                                 <button (click)="updateStatus(session.classId, 'Teacher No Show')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600">Teacher No-Show</button>
+                               </div>
+                            </div>
+                        } @else {
+                            <p class="text-center text-sm text-slate-500">Awaiting attendance update.</p>
+                        }
+                    } @else {
+                        <!-- Future Scheduled Actions -->
+                        @if (session.meetLink) {
+                            <a [href]="session.meetLink" target="_blank" rel="noopener noreferrer" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                Join with Google Meet
+                            </a>
+                        }
+                        @if (currentUser()?.role === 'Admin') {
+                          <div class="grid grid-cols-2 gap-2">
+                            <button (click)="initiateReschedule(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-slate-300 text-sm leading-4 font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">
+                                Reschedule
+                            </button>
+                            <button (click)="cancelSession(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
+                                Cancel
+                            </button>
+                          </div>
+                        }
+                        @if (currentUser()?.role === 'Teacher' || currentUser()?.role === 'Student') {
+                            <div class="grid grid-cols-2 gap-2">
+                                <button (click)="initiateReschedule(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-slate-300 text-sm leading-4 font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">
+                                    Reschedule
+                                </button>
+                                <button (click)="requestCancellation(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700">
+                                    Request Cancellation
+                                </button>
+                            </div>
+                        }
+                    }
+                  }
+                </div>
+
+                <div class="text-xs text-slate-400 text-center pt-2 border-t border-slate-100 mt-3">
+                  Duration: {{ session.durationHours }}h
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="p-10 text-center">
+      <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-slate-900">No upcoming classes</h3>
+      <p class="mt-1 text-sm text-slate-500">There are no classes scheduled for this view in the next 7 days.</p>
+    </div>
+  }
+</div>
