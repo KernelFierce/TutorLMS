@@ -42,7 +42,7 @@
       </li>
       <li>
         <button (click)="setView('messages')" [class]="activeView() === 'messages' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'" class="flex items-center w-full px-4 py-2.5 rounded-md transition-colors duration-200 text-sm font-medium">
-          <svg class="h-5 w-5 mr-3" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
           Messages
         </button>
       </li>
@@ -124,7 +124,9 @@
                 <tr>
                   <th scope="col" class="px-6 py-3">Student Name</th>
                   <th scope="col" class="px-6 py-3">Status</th>
-                  <th scope="col" class="px-6 py-3">Time Zone</th>
+                  <th scope="col" class="px-6 py-3 text-center">Upcoming</th>
+                  <th scope="col" class="px-6 py-3 text-center">Overdue</th>
+                  <th scope="col" class="px-6 py-3 text-center">Needs Grading</th>
                   <th scope="col" class="px-6 py-3">Actions</th>
                 </tr>
               </thead>
@@ -139,7 +141,33 @@
                         {{ student.status }}
                       </span>
                     </td>
-                    <td class="px-6 py-4">{{ student.timeZone }}</td>
+                    <td class="px-6 py-4 text-center">
+                        @if (student.assignmentStats.upcoming > 0) {
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ student.assignmentStats.upcoming }}
+                            </span>
+                        } @else {
+                            <span class="text-slate-400">-</span>
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        @if (student.assignmentStats.overdue > 0) {
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                {{ student.assignmentStats.overdue }}
+                            </span>
+                        } @else {
+                            <span class="text-slate-400">-</span>
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        @if (student.assignmentStats.needsGrading > 0) {
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                {{ student.assignmentStats.needsGrading }}
+                            </span>
+                        } @else {
+                            <span class="text-slate-400">-</span>
+                        }
+                    </td>
                     <td class="px-6 py-4 space-x-4 text-sm font-medium">
                         <button (click)="viewStudentProfile(student.studentId)" class="text-indigo-600 hover:text-indigo-900">View Profile</button>
                         <button (click)="openAddPlanModal(student.studentId)" class="text-blue-600 hover:text-blue-900">Add Plan</button>

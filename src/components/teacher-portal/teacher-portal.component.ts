@@ -39,7 +39,8 @@ export class TeacherPortalComponent {
   enrichedStudents = computed<EnrichedStudent[]>(() => {
     return this.tutorService.studentsForCurrentUser().map(student => ({
       ...student,
-      financials: this.tutorService.getStudentFinancials(student.studentId)
+      financials: this.tutorService.getStudentFinancials(student.studentId),
+      assignmentStats: this.tutorService.getStudentAssignmentStats(student.studentId)
     }));
   });
   

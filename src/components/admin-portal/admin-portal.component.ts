@@ -88,7 +88,9 @@ export class AdminPortalComponent {
   enrichedStudents = computed<EnrichedStudent[]>(() => {
     return this.tutorService.students().map(student => ({
       ...student,
-      financials: this.tutorService.getStudentFinancials(student.studentId)
+      financials: this.tutorService.getStudentFinancials(student.studentId),
+      // FIX: Added missing assignmentStats property to satisfy the EnrichedStudent type.
+      assignmentStats: this.tutorService.getStudentAssignmentStats(student.studentId)
     }));
   });
 

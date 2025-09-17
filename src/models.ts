@@ -1,5 +1,6 @@
 
 
+
 export type LeadStatus = 'New' | 'Contacted' | 'Demo Scheduled' | 'Converted' | 'Closed';
 export type StudentStatus = 'Active' | 'Inactive';
 export type SessionStatus = 
@@ -145,8 +146,15 @@ export interface StudentFinancials {
   alert: 'LOW CREDIT' | null;
 }
 
+export interface AssignmentStats {
+  upcoming: number;
+  overdue: number;
+  needsGrading: number;
+}
+
 export interface EnrichedStudent extends Student {
   financials: StudentFinancials;
+  assignmentStats: AssignmentStats;
 }
 
 export interface AgendaItem {

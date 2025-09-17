@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Lead, Student, ClassSession, Demo, Payment, StudentFinancials, AgendaItem, Teacher, EnrichedClassSession, User, Assignment, EnrichedAssignment, Message, Conversation, EnrichedMessage, TeacherAvailability, StudentStatus, SessionStatus, AttendanceData, RescheduleRequest, RecurringClass, DemoStatus, LessonPlan, TeacherProfileData, UserRole, RescheduleStatus } from './models';
+import { Lead, Student, ClassSession, Demo, Payment, StudentFinancials, AgendaItem, Teacher, EnrichedClassSession, User, Assignment, EnrichedAssignment, Message, Conversation, EnrichedMessage, TeacherAvailability, StudentStatus, SessionStatus, AttendanceData, RescheduleRequest, RecurringClass, DemoStatus, LessonPlan, TeacherProfileData, UserRole, RescheduleStatus, AssignmentStats } from './models';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -49,6 +49,7 @@ export class TutorDataService {
     { assignmentId: 'A-001', studentId: 'S-ABC123', teacherId: 'T-JSM45', title: 'Algebra Worksheet 1', instructions: 'Complete all odd-numbered problems.', dueDate: this.getFutureDate(5), status: 'Assigned', gradingSystem: 'Points', maxPoints: 20, notificationSent: false },
     { assignmentId: 'A-002', studentId: 'S-ABC123', teacherId: 'T-JSM45', title: 'Polynomial Factoring', instructions: 'Factor all polynomials on the attached sheet.', dueDate: this.getPastDate(1), status: 'Submitted', submissionDate: this.getPastDate(0), submissionLink: '#', submissionFileName: 'charlie_brown_hw.pdf', gradingSystem: 'Letter Grade' },
     { assignmentId: 'A-003', studentId: 'S-DEF456', teacherId: 'T-MDO67', title: 'Lab Report: Titration', instructions: 'Write a full lab report on the titration experiment.', dueDate: this.getPastDate(2), status: 'Graded', submissionDate: this.getPastDate(3), grade: '92', feedback: 'Excellent work, very thorough analysis.', gradingSystem: 'Percentage' },
+    { assignmentId: 'A-004', studentId: 'S-ABC123', teacherId: 'T-JSM45', title: 'Overdue Task', instructions: 'This task is overdue.', dueDate: this.getPastDate(3), status: 'Assigned', gradingSystem: 'Points', maxPoints: 10, notificationSent: true },
   ]);
 
   messages = signal<Message[]>([
@@ -324,6 +325,31 @@ export class TutorDataService {
     };
   }
   
+  getStudentAssignmentStats(studentId: string): AssignmentStats {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(now.getDate() + 7);
+    const sevenDaysFromNowStr = sevenDaysFromNow.toISOString().split('T')[0];
+
+    const studentAssignments = this.assignments().filter(a => a.studentId === studentId);
+
+    const upcoming = studentAssignments.filter(a => 
+        a.status === 'Assigned' &&
+        a.dueDate >= todayStr &&
+        a.dueDate <= sevenDaysFromNowStr
+    ).length;
+
+    const overdue = studentAssignments.filter(a =>
+        a.status === 'Assigned' &&
+        a.dueDate < todayStr
+    ).length;
+    
+    const needsGrading = studentAssignments.filter(a => a.status === 'Submitted').length;
+
+    return { upcoming, overdue, needsGrading };
+  }
+
   studentAttendanceData = computed<AttendanceData[]>(() => {
     return this.students().map(student => this.getAttendanceDataForEntity(student.studentId, 'Student'));
   });
