@@ -1,10 +1,9 @@
 
-
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TutorDataService } from '../../tutor-data.service';
-import { Lead, RecurrenceRule } from '../../models';
+import { DataService } from '../../data.service';
+import { Lead, RecurrenceRule, StudentStatus } from '../../models';
 
 @Component({
   selector: 'app-action-forms',
@@ -13,18 +12,16 @@ import { Lead, RecurrenceRule } from '../../models';
   imports: [CommonModule, FormsModule]
 })
 export class ActionFormsComponent {
-  private tutorService = inject(TutorDataService);
+  private dataService = inject(DataService);
   
   activeForm = signal<'session' | 'class' | 'demo' | 'payment' | 'assign'>('session');
   
-  // Expose service signals to the template
-  students = this.tutorService.activeStudents;
-  teachers = this.tutorService.teachers;
-  leads = computed(() => this.tutorService.leads().filter(l => l.status === 'New' || l.status === 'Contacted'));
+  students = computed(() => this.dataService.students().filter(s => s.status === StudentStatus.Active));
+  teachers = this.dataService.teachers;
   
-  // Timezones for dropdowns
-  // FIX: Intl.supportedValuesOf('timeZone') is not available in this environment.
-  // Using a curated list of common timezones instead.
+  // TODO: Implement leads signal in DataService
+  leads = signal<Lead[]>([]); 
+  
   timezones = signal([
     'UTC',
     'America/New_York',
@@ -40,7 +37,6 @@ export class ActionFormsComponent {
     'Australia/Sydney',
   ]);
   
-  // Form models
   sessionModel = signal({ studentId: '', teacherId: '', date: new Date().toISOString().split('T')[0], startTime: '12:00', durationHours: 1, topicsCovered: '', timeZone: 'Asia/Kolkata' });
   
   classModel = signal({ 
@@ -74,6 +70,7 @@ export class ActionFormsComponent {
 
   selectedLead = computed(() => {
     const leadId = this.demoModel().leadId;
+    // TODO: Update when leads are available in DataService
     return this.leads().find(l => l.id === leadId);
   });
 
@@ -84,8 +81,8 @@ export class ActionFormsComponent {
   onLogSession(): void {
     const sessionData = this.sessionModel();
     if (sessionData.studentId && sessionData.teacherId && sessionData.durationHours > 0 && sessionData.topicsCovered) {
-      // In a real app, convert local time to UTC before sending
-      this.tutorService.logSession(sessionData);
+      // TODO: Implement logSession in DataService
+      // this.dataService.logSession(sessionData);
       this.sessionModel.set({ studentId: '', teacherId: '', date: new Date().toISOString().split('T')[0], startTime: '12:00', durationHours: 1, topicsCovered: '', timeZone: 'Asia/Kolkata' });
       alert('Session logged successfully!');
     } else {
@@ -96,29 +93,16 @@ export class ActionFormsComponent {
   onScheduleClass(): void {
     const classData = this.classModel();
     if (classData.studentId && classData.teacherId && classData.durationHours > 0) {
-       // In a real app, you'd convert the start date + time + timezone to a UTC datetime before passing to service
       if (classData.recurring) {
         if (!classData.recurrenceRule.endDate) {
           alert('Please provide an end date for the recurring series.');
           return;
         }
-        this.tutorService.scheduleRecurringClass({
-          studentId: classData.studentId,
-          teacherId: classData.teacherId,
-          startTime: classData.startTime,
-          durationHours: classData.durationHours,
-          topicsCovered: classData.topicsCovered,
-          rule: classData.recurrenceRule
-        });
+        // TODO: Implement scheduleRecurringClass in DataService
+        // this.dataService.scheduleRecurringClass(classData);
       } else {
-        this.tutorService.scheduleClass({
-          studentId: classData.studentId,
-          teacherId: classData.teacherId,
-          date: classData.recurrenceRule.startDate, // Use start date for single class
-          startTime: classData.startTime,
-          durationHours: classData.durationHours,
-          topicsCovered: classData.topicsCovered
-        });
+        // TODO: Implement scheduleClass in DataService
+        // this.dataService.scheduleClass(classData);
       }
 
       this.resetClassModel();
@@ -149,7 +133,8 @@ export class ActionFormsComponent {
   onScheduleDemo(): void {
     const demoData = this.demoModel();
     if (demoData.leadId && demoData.date && demoData.teacherId && demoData.startTime) {
-      this.tutorService.scheduleDemo(demoData);
+      // TODO: Implement scheduleDemo in DataService
+      // this.dataService.scheduleDemo(demoData);
       this.demoModel.set({ leadId: '', teacherId: '', date: new Date().toISOString().split('T')[0], startTime: '12:00' });
        alert('Demo scheduled! Confirmation emails have been sent.');
     } else {
@@ -160,7 +145,8 @@ export class ActionFormsComponent {
   onLogPayment(): void {
     const paymentData = this.paymentModel();
     if (paymentData.studentId && paymentData.amount > 0) {
-      this.tutorService.logPayment(paymentData);
+      // TODO: Implement logPayment in DataService
+      // this.dataService.logPayment(paymentData);
       this.paymentModel.set({ studentId: '', paymentDate: new Date().toISOString().split('T')[0], amount: 0, currency: 'USD' });
       alert('Payment logged successfully!');
     } else {
@@ -171,7 +157,8 @@ export class ActionFormsComponent {
   onAssignTask(): void {
     const taskData = this.assignmentModel();
     if (taskData.studentId && taskData.teacherId && taskData.title && taskData.dueDate) {
-        this.tutorService.createAssignment(taskData);
+        // TODO: Implement createAssignment in DataService
+        // this.dataService.createAssignment(taskData);
         this.assignmentModel.set({
             studentId: '',
             teacherId: '',

@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from './auth.service';
+import { SupabaseService } from './supabase.service';
 import { LoginComponent } from './components/login/login.component';
 import { AdminPortalComponent } from './components/admin-portal/admin-portal.component';
 import { TeacherPortalComponent } from './components/teacher-portal/teacher-portal.component';
@@ -20,13 +20,13 @@ import { StudentPortalComponent } from './components/student-portal/student-port
   ],
 })
 export class AppComponent {
-  authService = inject(AuthService);
+  supabaseService = inject(SupabaseService);
 
-  // Expose signals from AuthService to the template
-  isAuthenticated = this.authService.isAuthenticated;
-  currentUser = this.authService.currentUser;
+  // Expose signals from SupabaseService to the template
+  isAuthenticated = this.supabaseService.isAuthenticated;
+  currentUser = this.supabaseService.currentUser;
 
   async logout(): Promise<void> {
-    await this.authService.logout();
+    await this.supabaseService.logout();
   }
 }

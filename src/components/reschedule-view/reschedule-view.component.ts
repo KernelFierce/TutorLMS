@@ -1,9 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, computed, signal, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TutorDataService } from '../../tutor-data.service';
+import { DataService } from '../../data.service';
 import { AuthService } from '../../auth.service';
-import { EnrichedClassSession, RescheduleRequest, RescheduleStatus } from '../../models';
+import { Course, RescheduleRequest, RescheduleStatus } from '../../models'; // Assuming these will be in the new models
 
 @Component({
   selector: 'app-reschedule-view',
@@ -13,20 +13,20 @@ import { EnrichedClassSession, RescheduleRequest, RescheduleStatus } from '../..
   providers: [DatePipe],
 })
 export class RescheduleViewComponent {
-  private tutorService = inject(TutorDataService);
+  private dataService = inject(DataService);
   private authService = inject(AuthService);
 
   currentUser = this.authService.currentUser;
-  rescheduleRequests = this.tutorService.rescheduleRequestsForCurrentUser;
+  
+  // TODO: Implement rescheduleRequestsForCurrentUser in DataService
+  rescheduleRequests = signal<RescheduleRequest[]>([]);
 
-  // Form models for each request type
   suggestionModels = signal<{ [key: string]: string }>({});
   proposedSlotsModels = signal<{ [key: string]: { date: string, startTime: string, endTime: string }[] }>({});
   confirmationModels = signal<{ [key: string]: string }>({});
   
   constructor() {
     effect(() => {
-      // Pre-populate models when requests change
       this.rescheduleRequests().forEach(req => {
         if (!this.proposedSlotsModels()[req.requestId]) {
           this.proposedSlotsModels.update(m => ({...m, [req.requestId]: []}));
@@ -37,20 +37,19 @@ export class RescheduleViewComponent {
 
   enrichedRequests = computed(() => {
     const requests = this.rescheduleRequests();
-    const allClasses = this.tutorService.classes();
-    const allStudents = this.tutorService.students();
-    const allTeachers = this.tutorService.teachers();
+    const allCourses = this.dataService.courses();
+    const allStudents = this.dataService.students();
+    const allTeachers = this.dataService.teachers();
 
     return requests.map(req => {
-      const classInfo = allClasses.find(c => c.classId === req.classId);
+      // TODO: Re-implement class enrichment logic based on new data structures
+      const courseInfo = undefined; // Placeholder
       const student = allStudents.find(s => s.studentId === req.studentId);
       const teacher = allTeachers.find(t => t.teacherId === req.teacherId);
-      const userTimeZone = this.currentUser()?.role === 'Student' ? student?.timeZone : teacher?.timeZone;
-      const enrichedClass = classInfo ? this.tutorService['enrichClassSession'](classInfo, userTimeZone || 'UTC') : undefined;
 
       return {
         ...req,
-        classInfo: enrichedClass,
+        courseInfo, // Placeholder
         studentName: student?.name || 'Unknown',
         teacherName: teacher?.name || 'Unknown',
       }
@@ -60,7 +59,8 @@ export class RescheduleViewComponent {
   submitSuggestion(requestId: string): void {
     const suggestion = this.suggestionModels()[requestId];
     if (suggestion && suggestion.trim()) {
-      this.tutorService.submitStudentRescheduleSuggestion(requestId, suggestion.trim());
+      // TODO: Implement submitStudentRescheduleSuggestion in DataService
+      // this.dataService.submitStudentRescheduleSuggestion(requestId, suggestion.trim());
       this.suggestionModels.update(m => ({ ...m, [requestId]: '' }));
     } else {
       alert('Please enter a suggestion.');
@@ -75,8 +75,9 @@ export class RescheduleViewComponent {
     const slots = this.proposedSlotsModels()[requestId];
     const validSlots = slots.filter(s => s.date && s.startTime && s.endTime);
     if (validSlots.length > 0) {
-      const isoSlots = validSlots.map(s => `${s.date}T${s.startTime}:00.000Z`); // Assuming teacher inputs in UTC
-      this.tutorService.submitTeacherProposedSlots(requestId, isoSlots);
+      const isoSlots = validSlots.map(s => `${s.date}T${s.startTime}:00.000Z`);
+      // TODO: Implement submitTeacherProposedSlots in DataService
+      // this.dataService.submitTeacherProposedSlots(requestId, isoSlots);
     } else {
       alert('Please add at least one valid time slot.');
     }
@@ -85,20 +86,18 @@ export class RescheduleViewComponent {
   submitConfirmation(requestId: string): void {
     const finalSlot = this.confirmationModels()[requestId];
     if (finalSlot) {
-      this.tutorService.submitStudentFinalConfirmation(requestId, finalSlot);
+      // TODO: Implement submitStudentFinalConfirmation in DataService
+      // this.dataService.submitStudentFinalConfirmation(requestId, finalSlot);
     } else {
       alert('Please select a slot to confirm.');
     }
   }
 
-  // Helper to format status for display, moving logic from template
   formatStatus(status: RescheduleStatus): string {
     if (!status) return '';
-    // This regex adds a space before each capital letter, effectively converting camelCase to Title Case.
     return status.replace(/([A-Z])/g, ' $1').trim();
   }
 
-  // Helper to format ISO strings for display
   formatDateTime(isoString: string, timeZone?: string): string {
     if (!isoString) return '';
     try {

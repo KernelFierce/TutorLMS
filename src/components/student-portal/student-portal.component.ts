@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TutorDataService } from '../../tutor-data.service';
+import { DataService } from '../../data.service';
 import { AuthService } from '../../auth.service';
 import { ScheduleViewComponent } from '../schedule-view/schedule-view.component';
 import { AssignmentsViewComponent } from '../assignments-view/assignments-view.component';
@@ -15,7 +15,7 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, ScheduleViewComponent, AssignmentsViewComponent, MessagingViewComponent, RescheduleViewComponent, FormsModule],
 })
 export class StudentPortalComponent {
-  tutorService = inject(TutorDataService);
+  dataService = inject(DataService);
   authService = inject(AuthService);
 
   @Output() logout = new EventEmitter<void>();
@@ -28,29 +28,9 @@ export class StudentPortalComponent {
   teacherAvailabilityForRequest = signal<{date: string, ranges: {startTime: string, endTime: string}[]}[]>([]);
 
   currentUser = this.authService.currentUser;
-  todaysAgenda = this.tutorService.todaysAgenda;
-  weeklySchedule = this.tutorService.weeklyScheduleForCurrentUser;
-  assignments = this.tutorService.assignmentsForCurrentUser;
   
-  studentData = computed(() => {
-    const studentId = this.currentUser()?.entityId;
-    if (!studentId) return null;
-    
-    const student = this.tutorService.students().find(s => s.studentId === studentId);
-    if (!student) return null;
+  // TODO: Re-implement studentData and related computed signals based on the new data structures.
 
-    return {
-      ...student,
-      financials: this.tutorService.getStudentFinancials(studentId)
-    };
-  });
-
-  teachersForStudent = computed(() => {
-    const student = this.studentData();
-    if (!student) return [];
-    return this.tutorService.teachers().filter(t => student.teacherIds.includes(t.teacherId));
-  });
-  
   setView(view: 'dashboard' | 'schedule' | 'assignments' | 'reschedule-requests' | 'messages'): void {
     this.activeView.set(view);
   }
@@ -68,9 +48,7 @@ export class StudentPortalComponent {
   onTeacherSelectForRequest(): void {
     const teacherId = this.newSessionModel().teacherId;
     if (teacherId) {
-      // In a real app, you'd fetch this from the backend. Here we filter mock data.
-      const allAvail = this.tutorService.teacherAvailability();
-      this.teacherAvailabilityForRequest.set(allAvail.filter(a => a.teacherId === teacherId));
+      // TODO: Fetch teacher availability from DataService
     } else {
       this.teacherAvailabilityForRequest.set([]);
     }
@@ -80,7 +58,7 @@ export class StudentPortalComponent {
     const studentId = this.currentUser()?.entityId;
     const { teacherId, dateTime } = this.newSessionModel();
     if (studentId && teacherId && dateTime) {
-      this.tutorService.requestNewSession(studentId, teacherId, dateTime);
+      // TODO: Implement requestNewSession in DataService
       this.closeRequestSessionModal();
     } else {
       alert('Please select a teacher and a time slot.');

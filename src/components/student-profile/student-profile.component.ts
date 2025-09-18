@@ -1,9 +1,8 @@
-
 import { Component, ChangeDetectionStrategy, inject, input, output, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EnrichedStudent, EnrichedClassSession, EnrichedAssignment, AttendanceData, LessonPlan, Student, StudentStatus } from '../../models';
-import { TutorDataService } from '../../tutor-data.service';
+import { Student, Course, Assignment, Attendance, LessonPlan, StudentStatus } from '../../models';
+import { DataService } from '../../data.service';
 import { AuthService } from '../../auth.service';
 
 @Component({
@@ -14,14 +13,13 @@ import { AuthService } from '../../auth.service';
   providers: [DatePipe],
 })
 export class StudentProfileComponent {
-  // FIX: Inject services instead of creating new instances to maintain singleton state.
-  private tutorService = inject(TutorDataService);
+  private dataService = inject(DataService);
   private authService = inject(AuthService);
   
-  student = input.required<EnrichedStudent>();
-  schedule = input.required<EnrichedClassSession[]>();
-  assignments = input.required<EnrichedAssignment[]>();
-  attendance = input.required<AttendanceData | null>();
+  student = input.required<Student>();
+  schedule = input.required<Course[]>();
+  assignments = input.required<Assignment[]>();
+  attendance = input.required<Attendance | null>();
   lessonPlans = input.required<LessonPlan[]>();
 
   back = output<void>();
@@ -45,7 +43,7 @@ export class StudentProfileComponent {
             name: currentStudent.name,
             authorizedEmail: currentStudent.authorizedEmail,
             hourlyRate: currentStudent.hourlyRate,
-            timeZone: currentStudent.timeZone,
+            timeZone: current.timeZone,
             status: currentStudent.status
         });
     }
@@ -53,7 +51,8 @@ export class StudentProfileComponent {
   }
 
   saveChanges(): void {
-    this.tutorService.updateStudentProfile(this.student().studentId, this.editableStudent());
+    // TODO: Implement updateStudentProfile in DataService
+    // this.dataService.updateStudentProfile(this.student().studentId, this.editableStudent());
     this.isEditMode.set(false);
     alert('Student profile updated!');
   }
@@ -65,12 +64,13 @@ export class StudentProfileComponent {
       return;
     }
     
-    this.tutorService.addLessonPlan({
-      studentId: this.student().studentId,
-      teacherId: this.currentUser()?.entityId || '', // Assuming teacher is logged in
-      date: new Date().toISOString().split('T')[0],
-      ...planData
-    });
+    // TODO: Implement addLessonPlan in DataService
+    // this.dataService.addLessonPlan({
+    //   studentId: this.student().studentId,
+    //   teacherId: this.currentUser()?.entityId || '', 
+    //   date: new Date().toISOString().split('T')[0],
+    //   ...planData
+    // });
 
     this.newLessonPlanModel.set({ topics: '', notes: ''});
     alert('Lesson plan added!');

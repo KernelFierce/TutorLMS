@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, input, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, input, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EnrichedAssignment, Assignment } from '../../models';
+import { Assignment, EnrichedAssignment } from '../../models';
 import { AuthService } from '../../auth.service';
-import { TutorDataService } from '../../tutor-data.service';
+import { DataService } from '../../data.service';
 
 @Component({
   selector: 'app-assignments-view',
@@ -14,10 +14,27 @@ import { TutorDataService } from '../../tutor-data.service';
 })
 export class AssignmentsViewComponent {
   authService = inject(AuthService);
-  tutorService = inject(TutorDataService);
+  dataService = inject(DataService);
+  private datePipe = inject(DatePipe);
 
   currentUser = this.authService.currentUser;
-  assignments = this.tutorService.assignmentsForCurrentUser;
+  assignments = input.required<Assignment[]>();
+
+  private students = this.dataService.students;
+  private teachers = this.dataService.teachers;
+
+  enrichedAssignments = computed<EnrichedAssignment[]>(() => {
+    const studentsMap = new Map(this.students().map(s => [s.studentId, s.name]));
+    const teachersMap = new Map(this.teachers().map(t => [t.teacherId, t.name]));
+    const now = new Date();
+
+    return this.assignments().map(assignment => ({
+      ...assignment,
+      studentName: studentsMap.get(assignment.studentId) || 'Unknown',
+      teacherName: teachersMap.get(assignment.teacherId) || 'Unknown',
+      isLate: new Date(assignment.dueDate) < now && assignment.status !== 'Graded' && assignment.status !== 'Submitted',
+    }));
+  });
   
   isGradeModalOpen = signal(false);
   gradingAssignment = signal<EnrichedAssignment | null>(null);
@@ -42,15 +59,15 @@ export class AssignmentsViewComponent {
       const file = input.files[0];
       const fileName = file.name;
       if (confirm(`Are you sure you want to submit "${fileName}" for this assignment?`)) {
-        this.tutorService.submitAssignment(assignmentId, fileName);
+        // TODO: Implement submitAssignment in DataService
+        // this.dataService.submitAssignment(assignmentId, file);
       }
-      // Reset file input
       input.value = '';
     }
   }
 
   viewSubmission(assignment: EnrichedAssignment): void {
-      alert(`Simulating download for submission:\n${assignment.submissionFileName}\n\nIn a real app, this would open the Google Drive link.`);
+      alert(`Simulating download for submission:\n${assignment.submissionFileName}\n\nIn a real app, this would open a secure link.`);
   }
 
   openGradeModal(assignment: EnrichedAssignment): void {
@@ -76,12 +93,14 @@ export class AssignmentsViewComponent {
         alert('Please enter a grade.');
         return;
     }
-    this.tutorService.editGrade(assignment.assignmentId, grade, feedback);
+    // TODO: Implement editGrade in DataService
+    // this.dataService.editGrade(assignment.assignmentId, grade, feedback);
     this.closeGradeModal();
   }
 
   sendNotification(assignmentId: string): void {
     alert('Simulating sending notification...');
-    this.tutorService.sendAssignmentNotification(assignmentId);
+    // TODO: Implement sendAssignmentNotification in DataService
+    // this.dataService.sendAssignmentNotification(assignmentId);
   }
 }

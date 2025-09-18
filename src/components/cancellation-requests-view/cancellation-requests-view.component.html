@@ -1,35 +1,41 @@
-<div class="bg-white rounded-lg shadow-md overflow-hidden">
-  <table class="w-full text-sm text-left text-slate-500">
-    <thead class="text-xs text-slate-700 uppercase bg-slate-50">
-      <tr>
-        <th scope="col" class="px-6 py-3">Student</th>
-        <th scope="col" class="px-6 py-3">Teacher</th>
-        <th scope="col" class="px-6 py-3">Session Date</th>
-        <th scope="col" class="px-6 py-3">Session Time</th>
-        <th scope="col" class="px-6 py-3">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (req of requests(); track req.classId) {
-        <tr class="bg-white border-b hover:bg-slate-50">
-          <td class="px-6 py-4 font-medium text-slate-900">{{ req.studentName }}</td>
-          <td class="px-6 py-4">{{ req.teacherName }}</td>
-          <td class="px-6 py-4">{{ req.localDateStr }}</td>
-          <td class="px-6 py-4">{{ req.localTime }} {{ req.localTimeZone }}</td>
-          <td class="px-6 py-4 space-x-4">
-            <button (click)="approve(req.classId)" class="font-medium text-green-600 hover:text-green-900">Approve</button>
-            <button (click)="deny(req.classId)" class="font-medium text-red-600 hover:text-red-900">Deny</button>
-          </td>
-        </tr>
-      } @empty {
+<div class="rounded-lg border border-slate-200 bg-white">
+  <div class="px-4 py-5 sm:px-6">
+    <h3 class="text-lg font-medium leading-6 text-slate-900">Pending Cancellation Requests</h3>
+    <p class="mt-1 text-sm text-slate-500">Approve or deny student-initiated session cancellations.</p>
+  </div>
+  <div class="border-t border-slate-200">
+    <table class="min-w-full divide-y divide-slate-300">
+      <thead class="bg-slate-50">
         <tr>
-          <td colspan="5" class="text-center p-8 text-slate-500">
-            <svg class="mx-auto h-12 w-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-            <h3 class="mt-2 text-sm font-medium text-slate-900">No Pending Requests</h3>
-            <p class="mt-1 text-sm text-slate-500">There are no pending cancellation requests to review.</p>
-          </td>
+          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-slate-900 sm:pl-6">Student</th>
+          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Teacher</th>
+          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Session Date & Time</th>
+          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-900">Topics</th>
+          <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6"><span class="sr-only">Actions</span></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="divide-y divide-slate-200 bg-white">
+        @for (req of enrichedRequests(); track req.courseId) {
+          <tr>
+            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-slate-900 sm:pl-6">{{ req.studentName }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-500">{{ req.teacherName }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-500">{{ req.localDateStr }} at {{ req.localTime }} ({{ req.localTimeZone }})</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-500">{{ req.topicsCovered }}</td>
+            <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-4">
+              <button (click)="approve(req.courseId)" class="font-medium text-green-600 hover:text-green-900">Approve</button>
+              <button (click)="deny(req.courseId)" class="font-medium text-red-600 hover:text-red-900">Deny</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="text-center p-8 text-slate-500">
+              <svg class="mx-auto h-12 w-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+              <h3 class="mt-2 text-sm font-medium text-slate-900">No Pending Requests</h3>
+              <p class="mt-1 text-sm text-slate-500">There are no pending cancellation requests to review.</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>

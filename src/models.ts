@@ -1,6 +1,4 @@
 
-
-
 export type LeadStatus = 'New' | 'Contacted' | 'Demo Scheduled' | 'Converted' | 'Closed';
 export type StudentStatus = 'Active' | 'Inactive';
 export type SessionStatus = 
@@ -55,8 +53,8 @@ export interface Student {
   paymentReminderStatus?: 'Queued' | 'Sent';
 }
 
-export interface ClassSession {
-  classId: string;
+export interface Course {
+  courseId: string;
   studentId: string;
   teacherId: string;
   date: string; 
@@ -82,15 +80,6 @@ export interface RecurringClass {
     durationHours: number;
     topicsCovered: string;
     rule: RecurrenceRule;
-}
-
-export interface EnrichedClassSession extends ClassSession {
-    studentName: string;
-    teacherName: string;
-    localDateStr: string;
-    localTime: string;
-    localTimeZone: string;
-    isPast: boolean;
 }
 
 export interface Demo {
@@ -131,12 +120,6 @@ export interface Assignment {
   notificationSent?: boolean;
 }
 
-export interface EnrichedAssignment extends Assignment {
-    studentName: string;
-    teacherName: string;
-    isLate: boolean;
-}
-
 export interface StudentFinancials {
   totalHoursCompleted: number;
   totalAmountBilled: number;
@@ -150,11 +133,6 @@ export interface AssignmentStats {
   upcoming: number;
   overdue: number;
   needsGrading: number;
-}
-
-export interface EnrichedStudent extends Student {
-  financials: StudentFinancials;
-  assignmentStats: AssignmentStats;
 }
 
 export interface AgendaItem {
@@ -174,11 +152,6 @@ export interface Message {
   senderRole: UserRole;
   timestamp: string; 
   text: string;
-}
-
-export interface EnrichedMessage extends Message {
-  senderName: string;
-  isCurrentUser: boolean;
 }
 
 export interface Conversation {
@@ -207,6 +180,15 @@ export interface AttendanceData {
     attendanceRate: number;
 }
 
+export interface Attendance {
+    attendanceId: string;
+    courseId: string;
+    studentId: string;
+    teacherId: string;
+    status: SessionStatus;
+    notes?: string;
+}
+
 // UPDATED: RescheduleRequest model supports the full "handshake" workflow.
 export interface RescheduleRequest {
     requestId: string;
@@ -226,10 +208,4 @@ export interface LessonPlan {
     date: string; 
     topics: string;
     notes?: string;
-}
-
-export interface TeacherProfileData {
-    teacher: Teacher;
-    assignedStudents: Student[];
-    attendance: AttendanceData;
 }

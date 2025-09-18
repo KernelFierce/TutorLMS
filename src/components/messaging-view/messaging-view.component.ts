@@ -1,9 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, AfterViewInit, ElementRef, viewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TutorDataService } from '../../tutor-data.service';
+import { DataService } from '../../data.service';
 import { AuthService } from '../../auth.service';
-import { Conversation, EnrichedMessage } from '../../models';
+import { Message, Conversation } from '../../models'; // Assuming Conversation will be defined in the new model
 
 @Component({
   selector: 'app-messaging-view',
@@ -13,13 +13,17 @@ import { Conversation, EnrichedMessage } from '../../models';
   providers: [DatePipe]
 })
 export class MessagingViewComponent implements AfterViewInit {
-  private tutorService = inject(TutorDataService);
+  private dataService = inject(DataService);
   private authService = inject(AuthService);
   private scrollContainer = viewChild<ElementRef<HTMLDivElement>>('scrollContainer');
 
   currentUser = this.authService.currentUser;
-  conversations = this.tutorService.conversationsForCurrentUser;
-  allMessages = this.tutorService.allMessagesEnriched;
+  
+  // TODO: Implement conversations signal in DataService
+  conversations = signal<Conversation[]>([]); 
+  
+  // TODO: Implement messages signal in DataService
+  allMessages = signal<Message[]>([]);
 
   activeConversationId = signal<string | null>(null);
   newMessage = signal('');
@@ -30,16 +34,16 @@ export class MessagingViewComponent implements AfterViewInit {
     return this.conversations().find(c => c.id === activeId);
   });
 
-  currentMessages = computed<EnrichedMessage[]>(() => {
+  currentMessages = computed(() => {
     const activeId = this.activeConversationId();
     if (!activeId) return [];
+    // TODO: Enrich messages with sender name and isCurrentUser flag
     return this.allMessages()
       .filter(m => m.conversationId === activeId)
       .sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   });
   
   constructor() {
-    // Automatically select the first conversation for non-student roles
     effect(() => {
         const user = this.currentUser();
         const convos = this.conversations();
@@ -50,11 +54,8 @@ export class MessagingViewComponent implements AfterViewInit {
         }
     });
 
-    // Effect to scroll to the bottom when new messages are added
     effect(() => {
-      // Triggered when currentMessages changes
       this.currentMessages();
-      // Use a timeout to allow the DOM to update before scrolling
       setTimeout(() => this.scrollToBottom(), 0);
     });
   }
@@ -71,7 +72,8 @@ export class MessagingViewComponent implements AfterViewInit {
     const convoId = this.activeConversationId();
     const text = this.newMessage().trim();
     if (convoId && text) {
-      this.tutorService.sendMessage(convoId, text);
+      // TODO: Implement sendMessage in DataService
+      // this.dataService.sendMessage(convoId, text);
       this.newMessage.set('');
     }
   }
