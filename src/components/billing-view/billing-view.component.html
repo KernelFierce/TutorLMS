@@ -1,0 +1,73 @@
+<div class="space-y-8">
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-slate-700">Billing Runs</h3>
+        <button class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+            Start New Billing Run
+        </button>
+    </div>
+    <p class="text-sm text-slate-500">Billing run feature is under construction.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Invoices -->
+    <div class="bg-white rounded-lg shadow-md">
+      <h3 class="text-xl font-semibold text-slate-700 p-6 border-b border-slate-200">Recent Invoices</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-500">
+          <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+            <tr>
+              <th scope="col" class="px-6 py-3">Student</th>
+              <th scope="col" class="px-6 py-3">Due Date</th>
+              <th scope="col" class="px-6 py-3">Amount</th>
+              <th scope="col" class="px-6 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(invoice of invoices(); track invoice.id) {
+              <tr class="bg-white border-b hover:bg-slate-50">
+                <td class="px-6 py-4 font-medium text-slate-900">{{ invoice.student.full_name }}</td>
+                <td class="px-6 py-4">{{ invoice.due_date | date:'yyyy-MM-dd' }}</td>
+                <td class="px-6 py-4 font-medium">${{ invoice.total_amount.toFixed(2) }}</td>
+                <td class="px-6 py-4">
+                   <span [class]="getStatusColor(invoice.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize">
+                        {{ invoice.status }}
+                    </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="text-center p-6 text-slate-500">No invoices found.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Payments -->
+    <div class="bg-white rounded-lg shadow-md">
+      <h3 class="text-xl font-semibold text-slate-700 p-6 border-b border-slate-200">Recent Payments</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-500">
+          <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+            <tr>
+              <th scope="col" class="px-6 py-3">Student</th>
+              <th scope="col" class="px-6 py-3">Date</th>
+              <th scope="col" class="px-6 py-3">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(payment of payments(); track payment.id) {
+              <tr class="bg-white border-b hover:bg-slate-50">
+                <td class="px-6 py-4 font-medium text-slate-900">{{ payment.student.full_name }}</td>
+                <td class="px-6 py-4">{{ payment.payment_date | date:'yyyy-MM-dd' }}</td>
+                <td class="px-6 py-4 font-medium text-green-600">${{ payment.amount.toFixed(2) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="3" class="text-center p-6 text-slate-500">No payments found.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

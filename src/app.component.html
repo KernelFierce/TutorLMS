@@ -1,16 +1,47 @@
 <div class="h-screen w-screen">
-  @if (!isAuthenticated()) {
-    <app-login></app-login>
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center h-full bg-slate-100 text-slate-600">
+      <svg class="animate-spin h-8 w-8 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-lg font-medium">Connecting to TutorHub...</p>
+      <p class="text-sm">Fetching your latest data.</p>
+    </div>
   } @else {
-    @switch (currentUser()?.role) {
-      @case ('Admin') {
-        <app-admin-portal (logout)="logout()"></app-admin-portal>
+    @if (!isAuthenticated()) {
+      @switch (view()) {
+        @case ('login') {
+          <app-login (showSignup)="view.set('signup')"></app-login>
+        }
+        @case ('signup') {
+          <app-signup (showLogin)="view.set('login')"></app-signup>
+        }
       }
-      @case ('Teacher') {
-        <app-teacher-portal (logout)="logout()"></app-teacher-portal>
-      }
-      @case ('Student') {
-        <app-student-portal (logout)="logout()"></app-student-portal>
+    } @else {
+      @switch (primaryRole()) {
+        @case ('Admin') {
+          <app-admin-portal (logout)="logout()"></app-admin-portal>
+        }
+        @case ('OrganizationAdmin') {
+          <app-admin-portal (logout)="logout()"></app-admin-portal>
+        }
+        @case ('Teacher') {
+          <app-teacher-portal (logout)="logout()"></app-teacher-portal>
+        }
+        @case ('Student') {
+          <app-student-portal (logout)="logout()"></app-student-portal>
+        }
+        @case ('Parent') {
+          <app-parent-portal (logout)="logout()"></app-parent-portal>
+        }
+        @case ('SuperAdmin') {
+          <div class="p-8 text-center">
+            <h1 class="text-2xl font-bold">SuperAdmin Portal</h1>
+            <p class="text-slate-600">This portal is under construction.</p>
+            <button (click)="logout()" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md">Logout</button>
+          </div>
+        }
       }
     }
   }

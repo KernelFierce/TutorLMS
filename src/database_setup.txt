@@ -1,0 +1,148 @@
+-- =================================================================
+-- TutorHub: FINAL & CORRECTED Enterprise-Grade Authentication & RLS Setup
+-- =================================================================
+-- This script completely overhauls the security model to use JWT
+-- custom claims via Auth Hooks. It includes a fully corrected cleanup step
+-- to resolve all dependency errors.
+
+BEGIN;
+
+-- STEP 1: CORRECTLY CLEANUP ALL OLD SECURITY OBJECTS
+-- Use CASCADE to safely drop the old functions and any objects that depend on them
+-- (like RLS policies and triggers). This is safe as we are recreating everything.
+DROP FUNCTION IF EXISTS public.get_current_user_org_id() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+
+-- Now, cleanup any other objects from previous partial runs to be certain.
+DROP FUNCTION IF EXISTS public.get_claims(uuid);
+DROP FUNCTION IF EXISTS public.custom_access_token_hook(json);
+DROP FUNCTION IF EXISTS public.get_claim(text);
+DROP PROCEDURE IF EXISTS public.create_org_rls_policy(TEXT, TEXT);
+
+-- Just to be certain, disable RLS on all tables before we re-enable it.
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+        EXECUTE 'ALTER TABLE public.' || quote_ident(r.tablename) || ' DISABLE ROW LEVEL SECURITY;';
+    END LOOP;
+END $$;
+
+
+-- STEP 2: AUTOMATIC USER PROFILE CREATION
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.people (id, email)
+  VALUES (new.id, new.email);
+  RETURN new;
+END;
+$$;
+
+-- Create a trigger that calls the function after a new user is created.
+-- We drop it first to ensure this script can be re-run.
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+
+-- STEP 3: CREATE THE AUTH TOKEN HOOK FUNCTION (CORRECTED)
+-- Uses SECURITY DEFINER to bypass RLS for its own internal queries.
+CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event json)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  claims jsonb;
+  user_id uuid;
+  org_id uuid;
+  user_roles jsonb;
+BEGIN
+  user_id := (event->'token'->>'sub')::uuid;
+
+  SELECT p.organization_id INTO org_id
+  FROM public.people p
+  WHERE p.id = user_id;
+
+  SELECT COALESCE(jsonb_agg(r.name), '[]'::jsonb) INTO user_roles
+  FROM public.user_roles ur
+  JOIN public.roles r ON ur.role_id = r.id
+  WHERE ur.person_id = user_id;
+
+  claims := (event->'token'->'claims')::jsonb;
+
+  claims := jsonb_set(
+    claims,
+    '{app_metadata}',
+    jsonb_build_object(
+      'organization_id', org_id,
+      'roles', user_roles
+    )
+  );
+  
+  event := jsonb_set(event::jsonb, '{token,claims}', claims);
+
+  RETURN event;
+END;
+$$;
+
+
+-- STEP 4: CREATE A HELPER FUNCTION FOR RLS POLICIES (CORRECTED)
+-- Correctly returns text which can be cast to uuid.
+CREATE OR REPLACE FUNCTION public.get_claim(claim TEXT)
+RETURNS text 
+LANGUAGE sql STABLE
+AS $$
+  SELECT current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> claim;
+$$;
+
+
+-- STEP 5: RECREATE ALL RLS POLICIES USING THE NEW JWT CLAIMS
+CREATE OR REPLACE PROCEDURE public.create_org_rls_policy(table_name TEXT, check_column TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', table_name);
+  EXECUTE format('DROP POLICY IF EXISTS "Allow members to access data in their own org" ON public.%I;', table_name);
+  EXECUTE format(
+    'CREATE POLICY "Allow members to access data in their own org" ON public.%I FOR ALL
+     USING (%I = (public.get_claim(''organization_id''))::uuid)
+     WITH CHECK (%I = (public.get_claim(''organization_id''))::uuid);',
+    table_name, check_column, check_column
+  );
+END;
+$$;
+
+-- Apply policies to tables with a direct organization_id
+CALL public.create_org_rls_policy('organizations', 'id');
+CALL public.create_org_rls_policy('people', 'organization_id');
+CALL public.create_org_rls_policy('courses', 'organization_id');
+CALL public.create_org_rls_policy('classes', 'organization_id');
+CALL public.create_org_rls_policy('assignments', 'organization_id');
+CALL public.create_org_rls_policy('invoices', 'organization_id');
+CALL public.create_org_rls_policy('conversations', 'organization_id');
+CALL public.create_org_rls_policy('reschedule_requests', 'organization_id');
+CALL public.create_org_rls_policy('prospects', 'organization_id');
+
+-- Apply policies for tables that require a JOIN
+ALTER TABLE public.student_enrollments ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.student_enrollments; CREATE POLICY "p" ON public.student_enrollments FOR ALL USING (EXISTS (SELECT 1 FROM public.courses WHERE courses.id = student_enrollments.course_id AND courses.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.submissions; CREATE POLICY "p" ON public.submissions FOR ALL USING (EXISTS (SELECT 1 FROM public.assignments WHERE assignments.id = submissions.assignment_id AND assignments.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.payments; CREATE POLICY "p" ON public.payments FOR ALL USING (EXISTS (SELECT 1 FROM public.invoices WHERE invoices.id = payments.invoice_id AND invoices.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.invoice_items ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.invoice_items; CREATE POLICY "p" ON public.invoice_items FOR ALL USING (EXISTS (SELECT 1 FROM public.invoices WHERE invoices.id = invoice_items.invoice_id AND invoices.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.class_attendance ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.class_attendance; CREATE POLICY "p" ON public.class_attendance FOR ALL USING (EXISTS (SELECT 1 FROM public.classes WHERE classes.id = class_attendance.class_id AND classes.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.conversation_participants ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.conversation_participants; CREATE POLICY "p" ON public.conversation_participants FOR ALL USING (EXISTS (SELECT 1 FROM public.conversations WHERE conversations.id = conversation_participants.conversation_id AND conversations.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.messages; CREATE POLICY "p" ON public.messages FOR ALL USING (EXISTS (SELECT 1 FROM public.conversations WHERE conversations.id = messages.conversation_id AND conversations.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.user_roles; CREATE POLICY "p" ON public.user_roles FOR ALL USING (EXISTS (SELECT 1 FROM public.people WHERE people.id = user_roles.person_id AND people.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.student_guardian_relationships ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.student_guardian_relationships; CREATE POLICY "p" ON public.student_guardian_relationships FOR ALL USING (EXISTS (SELECT 1 FROM public.people WHERE people.id = student_guardian_relationships.student_id AND people.organization_id = (public.get_claim('organization_id'))::uuid));
+ALTER TABLE public.account_credits ENABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS "p" ON public.account_credits; CREATE POLICY "p" ON public.account_credits FOR ALL USING (EXISTS (SELECT 1 FROM public.people WHERE people.id = account_credits.student_id AND people.organization_id = (public.get_claim('organization_id'))::uuid));
+
+
+COMMIT;

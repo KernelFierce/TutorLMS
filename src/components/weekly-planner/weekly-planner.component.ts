@@ -3,7 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TutorDataService } from '../../tutor-data.service';
 import { AuthService } from '../../auth.service';
-import { EnrichedClassSession, TeacherAvailability } from '../../models';
+import { TeacherAvailability } from '../../models';
 
 @Component({
   selector: 'app-weekly-planner',
@@ -18,13 +18,11 @@ export class WeeklyPlannerComponent {
 
   viewMode = signal<'week' | 'day'>('week');
   
-  // State for adding new availability ranges
   isAddModalOpen = signal(false);
   newRangeModel = signal({ date: '', startTime: '09:00', endTime: '10:00' });
   
   private today = new Date();
   
-  // Generate the next 7 days for the calendar view
   weekDays = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(this.today);
     date.setDate(this.today.getDate() + i);
@@ -33,18 +31,17 @@ export class WeeklyPlannerComponent {
 
   weeklyData = computed(() => {
     const user = this.authService.currentUser();
-    if (user?.role !== 'Teacher') return [];
+    if (!user?.roles.includes('Teacher')) return [];
 
-    const teacherId = user.entityId!;
-    const userTimeZone = this.tutorService.teachers().find(t => t.teacherId === teacherId)?.timeZone || 'UTC';
+    const teacherId = user.id;
 
     const availabilities = this.tutorService.teacherAvailability().filter(a => a.teacherId === teacherId);
-    const schedule = this.tutorService.weeklyScheduleForCurrentUser().filter(c => c.teacherId === teacherId);
+    const schedule = this.tutorService.weeklyScheduleForCurrentUser().filter(c => c.teacher.id === teacherId);
 
     return this.weekDays.map(date => {
         const dateString = date.toISOString().split('T')[0];
         const availForDay = availabilities.find(a => a.date === dateString);
-        const scheduleForDay = schedule.filter(s => s.date === dateString);
+        const scheduleForDay = schedule.filter(s => s.start_time.startsWith(dateString));
 
         return {
             date,
@@ -64,25 +61,27 @@ export class WeeklyPlannerComponent {
     this.isAddModalOpen.set(false);
   }
   
-  addAvailability(): void {
+  async addAvailability(): Promise<void> {
     const user = this.authService.currentUser();
-    if (user?.role !== 'Teacher') return;
+    if (!user?.roles.includes('Teacher')) return;
     
     const { date, startTime, endTime } = this.newRangeModel();
     if (date && startTime && endTime && startTime < endTime) {
-      this.tutorService.setAvailability(user.entityId!, date, { startTime, endTime }, true);
+      // await this.tutorService.setAvailability(user.id, date, { startTime, endTime }, true);
+      alert('Setting availability not implemented yet.');
       this.closeAddModal();
     } else {
       alert('Please ensure start time is before end time.');
     }
   }
 
-  removeAvailability(dateString: string, range: {startTime: string, endTime: string}): void {
+  async removeAvailability(dateString: string, range: {startTime: string, endTime: string}): Promise<void> {
     const user = this.authService.currentUser();
-    if (user?.role !== 'Teacher') return;
+    if (!user?.roles.includes('Teacher')) return;
 
     if (confirm(`Are you sure you want to remove the availability from ${range.startTime} to ${range.endTime}?`)) {
-       this.tutorService.setAvailability(user.entityId!, dateString, range, false);
+       // await this.tutorService.setAvailability(user.id, dateString, range, false);
+       alert('Removing availability not implemented yet.');
     }
   }
 }

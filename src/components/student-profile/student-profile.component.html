@@ -9,15 +9,15 @@
                     </svg>
                  </button>
                  @if (!isEditMode()) {
-                    <h2 class="text-3xl font-bold text-slate-800">{{ student().name }}'s Profile</h2>
+                    <h2 class="text-3xl font-bold text-slate-800">{{ student().full_name }}'s Profile</h2>
                  } @else {
-                    <input type="text" [(ngModel)]="editableStudent().name" class="text-3xl font-bold text-slate-800 border-b-2 border-indigo-500 bg-transparent -m-1 p-1"/>
+                    <input type="text" [(ngModel)]="editableStudent().full_name" class="text-3xl font-bold text-slate-800 border-b-2 border-indigo-500 bg-transparent -m-1 p-1"/>
                  }
             </div>
             <p class="text-slate-500 mt-1 ml-10">A complete academic overview of the student.</p>
         </div>
         <div>
-            @if(currentUser()?.role === 'Admin') {
+            @if(currentUser()?.roles.includes('Admin')) {
                 @if (!isEditMode()) {
                     <button (click)="toggleEditMode()" class="inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">Edit Profile</button>
                 } @else {
@@ -35,23 +35,23 @@
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="font-semibold text-slate-700 mb-2">Contact & Status</h3>
             @if (!isEditMode()) {
-                <p class="text-sm text-slate-600"><strong>Email:</strong> {{ student().authorizedEmail }}</p>
-                <p class="text-sm text-slate-600"><strong>Timezone:</strong> {{ student().timeZone }}</p>
+                <p class="text-sm text-slate-600"><strong>Email:</strong> {{ student().email }}</p>
+                <p class="text-sm text-slate-600"><strong>Timezone:</strong> {{ student().time_zone }}</p>
                 <p class="text-sm text-slate-600 mt-2">
                     <strong>Status:</strong>
-                    <span [class]="student().status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'" class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                    {{ student().status }}
+                    <span [class]="student().is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'" class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                    {{ student().is_active ? 'Active' : 'Inactive' }}
                     </span>
                 </p>
             } @else {
                 <div class="space-y-2 text-sm">
-                    <div><label class="font-bold">Email:</label><input type="email" [(ngModel)]="editableStudent().authorizedEmail" class="w-full border-b p-1"/></div>
-                    <div><label class="font-bold">Timezone:</label><input type="text" [(ngModel)]="editableStudent().timeZone" class="w-full border-b p-1"/></div>
+                    <div><label class="font-bold">Email:</label><input type="email" [(ngModel)]="editableStudent().email" class="w-full border-b p-1"/></div>
+                    <div><label class="font-bold">Timezone:</label><input type="text" [(ngModel)]="editableStudent().time_zone" class="w-full border-b p-1"/></div>
                     <div>
                         <label class="font-bold">Status:</label>
-                        <select [(ngModel)]="editableStudent().status" class="w-full border-b p-1">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
+                        <select [(ngModel)]="editableStudent().is_active" class="w-full border-b p-1">
+                            <option [ngValue]="true">Active</option>
+                            <option [ngValue]="false">Inactive</option>
                         </select>
                     </div>
                 </div>
@@ -60,23 +60,16 @@
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="font-semibold text-slate-700 mb-2">Financials</h3>
             @if (!isEditMode()) {
-                <p class="text-sm text-slate-600"><strong>Hourly Rate:</strong> ${{ student().hourlyRate.toFixed(2) }}</p>
+                <p class="text-sm text-slate-600"><strong>Hourly Rate:</strong> ${{ student().enrollments[0]?.hourly_rate.toFixed(2) }}</p>
                 <p class="text-sm font-medium mt-2" [class]="student().financials.outstandingBalance > 0 ? 'text-red-600' : student().financials.outstandingBalance < 0 ? 'text-green-600' : 'text-slate-600'">
                     <strong>Account Status:</strong> {{ student().financials.accountStatus }}
                 </p>
             } @else {
                  <div class="space-y-2 text-sm">
-                    <div><label class="font-bold">Hourly Rate:</label><input type="number" [(ngModel)]="editableStudent().hourlyRate" class="w-full border-b p-1"/></div>
+                    <!-- <div><label class="font-bold">Hourly Rate:</label><input type="number" [(ngModel)]="editableStudent().hourlyRate" class="w-full border-b p-1"/></div> -->
                 </div>
             }
         </div>
-        @if (attendance(); as att) {
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="font-semibold text-slate-700 mb-2">Attendance Summary</h3>
-                <p class="text-2xl font-bold" [class]="getAttendanceRateColor(att.attendanceRate)">{{ att.attendanceRate.toFixed(1) }}%</p>
-                <p class="text-sm text-slate-500">Attended: {{ att.totalCompleted }} | Missed: {{ att.totalStudentNoShow }}</p>
-            </div>
-        }
     </section>
 
     <!-- Detailed Tabs -->
@@ -93,68 +86,19 @@
             @switch(activeTab()) {
                 @case('schedule') {
                      <div class="bg-white rounded-lg shadow-md p-6 max-h-96 overflow-y-auto">
-                        @if(schedule().length > 0) {
-                            <ul class="space-y-4">
-                            @for (item of schedule(); track item.classId) {
-                                <li class="flex items-center">
-                                    <div class="flex-1">
-                                        <p class="font-medium text-slate-800">{{ item.teacherName }} <span class="text-sm font-normal text-slate-500">({{ item.topicsCovered }})</span></p>
-                                        <p class="text-sm text-slate-500">{{ item.localDateStr }}</p>
-                                    </div>
-                                    <span class="text-sm font-semibold text-indigo-600 whitespace-nowrap">{{ item.localTime }} {{ item.localTimeZone }}</span>
-                                </li>
-                            }
-                            </ul>
-                        } @else {
-                            <p class="text-slate-500 text-center py-4">No classes found.</p>
-                        }
+                        <p class="text-slate-500 text-center py-4">Schedule view coming soon.</p>
                     </div>
                 }
                 @case('assignments') {
                     <div class="bg-white rounded-lg shadow-md max-h-96 overflow-y-auto">
-                        <table class="w-full text-sm text-left text-slate-500">
-                            <thead class="text-xs text-slate-700 uppercase bg-slate-50 sticky top-0">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">Title</th>
-                                    <th scope="col" class="px-6 py-3">Status</th>
-                                    <th scope="col" class="px-6 py-3">Grade</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200">
-                                @for (assignment of assignments(); track assignment.assignmentId) {
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="px-6 py-4 font-medium text-slate-900">{{ assignment.title }}</td>
-                                        <td class="px-6 py-4">
-                                            <span [class]="getAssignmentStatusColor(assignment.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                            {{ assignment.status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 font-bold">{{ assignment.grade || 'N/A' }}</td>
-                                    </tr>
-                                } @empty {
-                                    <tr><td colspan="3" class="text-center p-8 text-slate-500">No assignments found.</td></tr>
-                                }
-                            </tbody>
-                        </table>
+                        <p class="text-slate-500 text-center py-4">Assignments view coming soon.</p>
                     </div>
                 }
                  @case('plans') {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-white rounded-lg shadow-md p-6 max-h-96 overflow-y-auto">
                            <h4 class="font-semibold text-slate-700 mb-3">History</h4>
-                           @if (lessonPlans().length > 0) {
-                               <ul class="space-y-3">
-                                   @for(plan of lessonPlans(); track plan.planId) {
-                                       <li class="border-b border-slate-100 pb-3">
-                                           <p class="font-medium text-slate-800">{{ plan.topics }}</p>
-                                           <p class="text-sm text-slate-500">{{ plan.notes }}</p>
-                                           <p class="text-xs text-slate-400 mt-1">{{ plan.date }} - by {{ plan.teacherId }}</p>
-                                       </li>
-                                   }
-                               </ul>
-                           } @else {
-                               <p class="text-slate-500 text-center py-4">No lesson plans yet.</p>
-                           }
+                           <p class="text-slate-500 text-center py-4">Lesson plan history coming soon.</p>
                         </div>
                         <div class="bg-white rounded-lg shadow-md p-6">
                            <h4 class="font-semibold text-slate-700 mb-3">Add New Plan</h4>

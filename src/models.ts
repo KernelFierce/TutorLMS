@@ -1,123 +1,199 @@
-
-export type LeadStatus = 'New' | 'Contacted' | 'Demo Scheduled' | 'Converted' | 'Closed';
+// --- ENUMS & TYPES ---
+export type UserRole = 'SuperAdmin' | 'OrganizationAdmin' | 'Admin' | 'Teacher' | 'Student' | 'Parent';
+export type ProspectStatus = 'New' | 'Contacted' | 'Demo Scheduled' | 'On Hold' | 'Converted' | 'Not Interested';
+export type SessionStatus = 'Scheduled' | 'Completed' | 'Cancelled' | 'Student No Show' | 'Teacher No Show' | 'Reschedule Pending' | 'Cancellation Pending';
+export type SubmissionStatus = 'Pending' | 'Submitted' | 'Graded' | 'Late';
+export type AssignmentUiStatus = 'Assigned' | 'Submitted' | 'Graded';
+export type RequestStatus = 'Pending' | 'Approved' | 'Denied';
 export type StudentStatus = 'Active' | 'Inactive';
-export type SessionStatus = 
-  | 'Scheduled' 
-  | 'Completed' 
-  | 'Canceled' 
-  | 'Student No Show' 
-  | 'Teacher No Show'
-  | 'Reschedule Pending'
-  | 'Cancellation Pending';
-
-export type DemoStatus = 'Pending Confirmation' | 'Confirmed' | 'Canceled';
-export type AssignmentStatus = 'Assigned' | 'Submitted' | 'Graded';
-export type UserRole = 'Admin' | 'Teacher' | 'Student';
-
-// NEW: More granular status for the multi-step reschedule workflow
+export type DemoStatus = 'Pending Confirmation' | 'Confirmed' | 'Completed' | 'Canceled';
 export type RescheduleStatus = 'Pending Student Suggestion' | 'Pending Teacher Slots' | 'Pending Student Confirmation' | 'Confirmed';
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'PartiallyPaid' | 'Overdue' | 'Void';
 
+
+// --- AUTH MODELS ---
 export interface User {
-  name: string;
+  id: string;
+  organization_id?: string | null;
+  full_name: string;
   email: string;
-  picture?: string;
-  role: UserRole;
-  entityId?: string; 
+  avatar_url?: string;
+  roles: UserRole[];
+  is_active: boolean;
+  time_zone: string;
 }
 
-export interface Teacher {
-    teacherId: string;
-    name: string;
-    email: string;
-    timeZone: string;
+// --- BASE DATA MODELS (Mirroring DB Tables) ---
+
+export interface Person {
+  id: string;
+  organization_id: string;
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  avatar_url?: string;
+  is_active: boolean;
+  time_zone: string;
 }
+// For UI purposes, we'll use Person and add role-specific enriched types
+export type Student = Person;
+export type Teacher = Person;
 
 export interface Lead {
-  id: string;
-  timestamp: string;
-  name: string;
-  contactEmail: string;
-  timeZone: string;
-  subjectOfInterest: string;
-  status: LeadStatus;
-}
-
-export interface Student {
-  studentId: string;
-  name: string;
-  timeZone: string;
-  hourlyRate: number;
-  status: StudentStatus;
-  authorizedEmail: string; 
-  teacherIds: string[];
-  paymentReminderStatus?: 'Queued' | 'Sent';
+    id: string;
+    timestamp: string;
+    name: string;
+    contactEmail: string;
+    timeZone: string;
+    subjectOfInterest: string;
+    status: ProspectStatus;
 }
 
 export interface Course {
-  courseId: string;
-  studentId: string;
-  teacherId: string;
-  date: string; 
-  startTime: string; 
-  durationHours: number;
-  topicsCovered: string;
-  status: SessionStatus;
-  meetLink?: string;
+    id: number;
+    organization_id: string;
+    name: string;
+    description?: string;
+    teacher: Teacher;
+}
+
+export interface Enrollment {
+    id: number;
+    student: Student;
+    course: Course;
+    enrollment_date: string;
+    hourly_rate: number;
+}
+
+export interface Class {
+    id: number;
+    organization_id: string;
+    course: Course;
+    teacher: Teacher;
+    students: Student[]; // A class can have multiple students
+    start_time: string; // ISO 8601 UTC
+    end_time: string;   // ISO 8601 UTC
+    status: SessionStatus;
+    title?: string;
+    meet_link?: string;
+}
+
+export interface Assignment {
+    id: number;
+    course: Course;
+    organization_id: string;
+    title: string;
+    description?: string;
+    due_date?: string; // ISO 8601 UTC
+}
+
+export interface Submission {
+    id: number;
+    assignment: Assignment;
+    student: Student;
+    status: SubmissionStatus;
+    content?: string; // Could be text or a link to a file
+    submitted_at?: string; // ISO 8601 UTC
+    grade?: number;
+    feedback?: string;
+}
+
+export interface Payment {
+  id: number;
+  student: Student;
+  payment_date: string;
+  amount: number;
+  method?: string; // e.g., 'Stripe', 'Cash'
+}
+
+export interface RescheduleRequest {
+    id: number;
+    class: Class;
+    requesting_person: Person;
+    reason?: string;
+    status: RequestStatus;
+    proposed_slots?: string[]; // Array of ISO 8601 UTC timestamps
+    final_slot?: string; // ISO 8601 UTC timestamp
+}
+
+export interface Conversation {
+    id: number;
+    organization_id: string;
+    title?: string;
+    participants: Person[];
+    observers: Person[];
+}
+
+export interface Message {
+    id: number;
+    conversation_id: number;
+    sender: Person;
+    content: string;
+    created_at: string; // ISO 8601 UTC
+}
+
+export interface LessonPlan {
+    id: string; // Using string until DB table is added
+    student: Student;
+    teacher: Teacher;
+    date: string;
+    topics: string;
+    notes?: string;
+}
+
+export interface TeacherAvailability {
+    teacherId: string;
+    date: string; // YYYY-MM-DD
+    ranges: { startTime: string, endTime: string }[]; // HH:mm
 }
 
 export interface RecurrenceRule {
     frequency: 'daily' | 'weekly';
     interval: number;
     daysOfWeek?: ('SUN' | 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT')[];
-    startDate: string; 
-    endDate: string; 
+    startDate: string; // YYYY-MM-DD
+    endDate: string;   // YYYY-MM-DD
 }
 
-export interface RecurringClass {
-    studentId: string;
-    teacherId: string;
-    startTime: string; 
-    durationHours: number;
-    topicsCovered: string;
-    rule: RecurrenceRule;
+export interface Invoice {
+    id: number;
+    student: Student;
+    issue_date: string;
+    due_date: string;
+    total_amount: number;
+    status: InvoiceStatus;
+    items: InvoiceItem[];
 }
 
-export interface Demo {
-  demoId: string;
-  leadId: string;
-  teacherId: string;
-  date: string; 
-  startTime: string; 
-  status: DemoStatus;
-  meetLink?: string;
+export interface InvoiceItem {
+    id: number;
+    class_id?: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    line_total: number;
 }
 
-export interface Payment {
-  paymentId: string;
-  studentId: string;
-  paymentDate: string; 
-  amount: number;
-  currency: string;
+
+// --- ENRICHED/COMPOSITE MODELS FOR UI ---
+
+export interface EnrichedClass extends Class {
+    // Timezone-converted properties for a specific user
+    localStartTime: string;
+    localEndTime: string;
+    localTimeZone: string;
+    isPast: boolean;
 }
 
-export interface Assignment {
-  assignmentId: string;
-  studentId: string;
-  teacherId: string;
-  title: string;
-  instructions: string;
-  dueDate: string; 
-  submissionDate?: string; 
-  status: AssignmentStatus;
-  submissionLink?: string;
-  submissionFileName?: string;
-  grade?: string;
-  // NEW: Advanced grading and feedback system
-  gradingSystem: 'Points' | 'Percentage' | 'Letter Grade';
-  maxPoints?: number;
-  feedback?: string; 
-  teacherComments?: string; 
-  notificationSent?: boolean;
+export interface EnrichedSubmission extends Submission {
+    uiStatus: AssignmentUiStatus;
+    isLate: boolean;
+}
+
+export interface EnrichedStudent extends Student {
+  financials: StudentFinancials;
+  assignmentStats: AssignmentStats;
+  enrollments: Enrollment[];
 }
 
 export interface StudentFinancials {
@@ -137,75 +213,30 @@ export interface AssignmentStats {
 
 export interface AgendaItem {
     type: 'Class' | 'Demo';
-    date: string;
-    time?: string;
+    date: string; // Local date
+    time?: string; // Local time
     title: string;
     details: string;
     meetLink?: string;
-    status: SessionStatus | DemoStatus;
-}
-
-export interface Message {
-  messageId: string;
-  conversationId: string;
-  senderId: string; 
-  senderRole: UserRole;
-  timestamp: string; 
-  text: string;
-}
-
-export interface Conversation {
-  id: string; 
-  studentId: string;
-  studentName: string;
-  teacherId: string;
-  teacherName: string;
-  lastMessageText: string;
-  lastMessageTimestamp: string;
-}
-
-// UPDATED: Teacher availability now supports flexible time ranges.
-export interface TeacherAvailability {
-    teacherId: string;
-    date: string; 
-    ranges: { startTime: string, endTime: string }[]; // e.g., '09:00', '11:30'
+    status: SessionStatus | DemoStatus | string;
+    rawStartTime: string; // For sorting
 }
 
 export interface AttendanceData {
-    id: string; 
-    name: string;
-    totalCompleted: number;
-    totalStudentNoShow: number;
-    totalTeacherNoShow: number;
-    attendanceRate: number;
+  id: string;
+  name: string;
+  totalCompleted: number;
+  totalStudentNoShow: number;
+  totalTeacherNoShow: number;
+  attendanceRate: number;
 }
 
-export interface Attendance {
-    attendanceId: string;
-    courseId: string;
-    studentId: string;
-    teacherId: string;
-    status: SessionStatus;
-    notes?: string;
+export interface EnrichedConversation extends Conversation {
+    lastMessagePreview: string;
+    lastMessageTimestamp: string;
+    otherParticipants: Person[]; // Participants excluding the current user
 }
 
-// UPDATED: RescheduleRequest model supports the full "handshake" workflow.
-export interface RescheduleRequest {
-    requestId: string;
-    classId: string;
-    studentId: string;
-    teacherId: string;
-    studentSuggestion?: string; // Student's initial text suggestion
-    teacherProposedSlots: string[]; // Array of ISO datetime strings from teacher
-    studentConfirmedSlot?: string; // The slot the student finally confirms
-    status: RescheduleStatus;
-}
-
-export interface LessonPlan {
-    planId: string;
-    studentId: string;
-    teacherId: string;
-    date: string; 
-    topics: string;
-    notes?: string;
+export interface EnrichedMessage extends Message {
+    isCurrentUser: boolean;
 }

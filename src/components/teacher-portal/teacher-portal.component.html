@@ -59,19 +59,22 @@
   <main class="flex-1 bg-slate-100 overflow-y-auto">
     <div class="p-8">
       <!-- Header -->
-      <header class="mb-8">
-        <h2 class="text-3xl font-bold text-slate-800">{{ getGreeting() }}, {{ currentUser()?.name }}!</h2>
-        <p class="text-slate-500 mt-1">
-          @switch (activeView()) {
-            @case('dashboard') { Here's what's on for today. }
-            @case('planner') { Manage your weekly schedule and availability. }
-            @case('students') { Here is a list of your assigned students. }
-            @case('student-profile') { Viewing a detailed student profile. }
-            @case('assignments') { Here you can manage student assignments. }
-            @case('reschedule-requests') { Manage any pending reschedule requests. }
-            @case('messages') { Communicate with your students. }
-          }
-        </p>
+      <header class="mb-8 flex justify-between items-start">
+        <div>
+          <h2 class="text-3xl font-bold text-slate-800">{{ getGreeting() }}, {{ currentUser()?.full_name }}!</h2>
+          <p class="text-slate-500 mt-1">
+            @switch (activeView()) {
+              @case('dashboard') { Here's what's on for today. }
+              @case('planner') { Manage your weekly schedule and availability. }
+              @case('students') { Here is a list of your assigned students. }
+              @case('student-profile') { Viewing a detailed student profile. }
+              @case('assignments') { Here you can manage student assignments. }
+              @case('reschedule-requests') { Manage any pending reschedule requests. }
+              @case('messages') { Communicate with your students. }
+            }
+          </p>
+        </div>
+        <app-role-switcher></app-role-switcher>
       </header>
       
       @switch (activeView()) {
@@ -82,17 +85,17 @@
               @if(todaysAgenda().length > 0) {
                 <ul class="space-y-4">
                   @for (item of todaysAgenda(); track item.title) {
-                    <li class="flex items-start" [class.opacity-50]="item.status === 'Canceled'">
+                    <li class="flex items-start" [class.opacity-50]="item.status === 'Cancelled'">
                        <div class="flex-1 flex items-center">
                           <div class="w-3 h-3 bg-green-500 rounded-full mt-1.5 mr-4 flex-shrink-0"></div>
                           <div>
-                            <p class="font-medium text-slate-800" [class.line-through]="item.status === 'Canceled'">{{ item.title }}</p>
+                            <p class="font-medium text-slate-800" [class.line-through]="item.status === 'Cancelled'">{{ item.title }}</p>
                             <p class="text-sm text-slate-500">{{ item.details }}</p>
                           </div>
                       </div>
                       <div class="flex items-center flex-shrink-0 ml-4">
-                        @if (item.status === 'Canceled') {
-                            <span class="text-sm font-semibold text-red-600 whitespace-nowrap">Canceled</span>
+                        @if (item.status === 'Cancelled') {
+                            <span class="text-sm font-semibold text-red-600 whitespace-nowrap">Cancelled</span>
                         } @else {
                             @if(item.time) {
                             <span class="text-sm font-semibold text-indigo-600 whitespace-nowrap">{{ item.time }}</span>
@@ -131,14 +134,14 @@
                 </tr>
               </thead>
               <tbody>
-                @for (student of enrichedStudents(); track student.studentId) {
+                @for (student of enrichedStudents(); track student.id) {
                   <tr class="bg-white border-b hover:bg-slate-50">
                     <td class="px-6 py-4 font-medium text-slate-900">
-                       {{ student.name }}
+                       {{ student.full_name }}
                     </td>
                     <td class="px-6 py-4">
-                      <span [class]="student.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                        {{ student.status }}
+                      <span [class]="student.is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                        {{ student.is_active ? 'Active' : 'Inactive' }}
                       </span>
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -169,8 +172,8 @@
                         }
                     </td>
                     <td class="px-6 py-4 space-x-4 text-sm font-medium">
-                        <button (click)="viewStudentProfile(student.studentId)" class="text-indigo-600 hover:text-indigo-900">View Profile</button>
-                        <button (click)="openAddPlanModal(student.studentId)" class="text-blue-600 hover:text-blue-900">Add Plan</button>
+                        <button (click)="viewStudentProfile(student.id)" class="text-indigo-600 hover:text-indigo-900">View Profile</button>
+                        <button (click)="openAddPlanModal(student.id)" class="text-blue-600 hover:text-blue-900">Add Plan</button>
                     </td>
                   </tr>
                 }
@@ -181,11 +184,7 @@
         @case('student-profile') {
            @if (selectedStudentProfile(); as profile) {
                 <app-student-profile 
-                    [student]="profile.student"
-                    [schedule]="profile.schedule"
-                    [assignments]="profile.assignments"
-                    [attendance]="profile.attendance"
-                    [lessonPlans]="profile.lessonPlans"
+                    [student]="profile"
                     (back)="setView('students')"
                 ></app-student-profile>
             }

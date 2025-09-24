@@ -1,9 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, input, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Assignment, EnrichedAssignment } from '../../models';
+import { EnrichedSubmission, AssignmentUiStatus } from '../../models';
 import { AuthService } from '../../auth.service';
-import { DataService } from '../../data.service';
+import { TutorDataService } from '../../tutor-data.service';
 
 @Component({
   selector: 'app-assignments-view',
@@ -14,37 +14,27 @@ import { DataService } from '../../data.service';
 })
 export class AssignmentsViewComponent {
   authService = inject(AuthService);
-  dataService = inject(DataService);
-  private datePipe = inject(DatePipe);
+  tutorService = inject(TutorDataService);
 
   currentUser = this.authService.currentUser;
-  assignments = input.required<Assignment[]>();
+  
+  // Allow parent components to override the submissions list
+  submissionsInput = input<EnrichedSubmission[] | null>(null);
 
-  private students = this.dataService.students;
-  private teachers = this.dataService.teachers;
-
-  enrichedAssignments = computed<EnrichedAssignment[]>(() => {
-    const studentsMap = new Map(this.students().map(s => [s.studentId, s.name]));
-    const teachersMap = new Map(this.teachers().map(t => [t.teacherId, t.name]));
-    const now = new Date();
-
-    return this.assignments().map(assignment => ({
-      ...assignment,
-      studentName: studentsMap.get(assignment.studentId) || 'Unknown',
-      teacherName: teachersMap.get(assignment.teacherId) || 'Unknown',
-      isLate: new Date(assignment.dueDate) < now && assignment.status !== 'Graded' && assignment.status !== 'Submitted',
-    }));
+  submissions = computed(() => {
+    // If an input is provided, use it. Otherwise, use the default for the current user.
+    return this.submissionsInput() ?? this.tutorService.submissionsForCurrentUser();
   });
   
   isGradeModalOpen = signal(false);
-  gradingAssignment = signal<EnrichedAssignment | null>(null);
+  gradingSubmission = signal<EnrichedSubmission | null>(null);
 
   gradeModel = signal({
     grade: '',
     feedback: ''
   });
 
-  getStatusColor(status: string): string {
+  getStatusColor(status: AssignmentUiStatus): string {
     switch (status) {
       case 'Assigned': return 'bg-blue-100 text-blue-800';
       case 'Submitted': return 'bg-yellow-100 text-yellow-800';
@@ -53,54 +43,51 @@ export class AssignmentsViewComponent {
     }
   }
 
-  onFileSelected(event: Event, assignmentId: string): void {
+  async onFileSelected(event: Event, submissionId: number): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       const fileName = file.name;
       if (confirm(`Are you sure you want to submit "${fileName}" for this assignment?`)) {
-        // TODO: Implement submitAssignment in DataService
-        // this.dataService.submitAssignment(assignmentId, file);
+        await this.tutorService.submitAssignment(submissionId, fileName);
       }
       input.value = '';
     }
   }
 
-  viewSubmission(assignment: EnrichedAssignment): void {
-      alert(`Simulating download for submission:\n${assignment.submissionFileName}\n\nIn a real app, this would open a secure link.`);
+  viewSubmission(submission: EnrichedSubmission): void {
+      alert(`Simulating download for submission:\n${submission.content}\n\nIn a real app, this would open the link.`);
   }
 
-  openGradeModal(assignment: EnrichedAssignment): void {
-    this.gradingAssignment.set(assignment);
+  openGradeModal(submission: EnrichedSubmission): void {
+    this.gradingSubmission.set(submission);
     this.gradeModel.set({
-      grade: assignment.grade || '',
-      feedback: assignment.feedback || '',
+      grade: submission.grade?.toString() || '',
+      feedback: submission.feedback || '',
     });
     this.isGradeModalOpen.set(true);
   }
 
   closeGradeModal(): void {
     this.isGradeModalOpen.set(false);
-    this.gradingAssignment.set(null);
+    this.gradingSubmission.set(null);
   }
 
-  saveGrade(): void {
-    const assignment = this.gradingAssignment();
-    if (!assignment) return;
+  async saveGrade(): Promise<void> {
+    const submission = this.gradingSubmission();
+    if (!submission) return;
 
     const { grade, feedback } = this.gradeModel();
     if (!grade) {
         alert('Please enter a grade.');
         return;
     }
-    // TODO: Implement editGrade in DataService
-    // this.dataService.editGrade(assignment.assignmentId, grade, feedback);
+    await this.tutorService.gradeAssignment(submission.id, grade, feedback);
     this.closeGradeModal();
   }
 
-  sendNotification(assignmentId: string): void {
+  async sendNotification(submissionId: number): Promise<void> {
     alert('Simulating sending notification...');
-    // TODO: Implement sendAssignmentNotification in DataService
-    // this.dataService.sendAssignmentNotification(assignmentId);
+    // await this.tutorService.sendAssignmentNotification(submissionId);
   }
 }

@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject, input, output, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Student, Course, Assignment, Attendance, LessonPlan, StudentStatus } from '../../models';
-import { DataService } from '../../data.service';
+import { EnrichedStudent, Student } from '../../models';
+import { TutorDataService } from '../../tutor-data.service';
 import { AuthService } from '../../auth.service';
 
 @Component({
@@ -13,14 +13,10 @@ import { AuthService } from '../../auth.service';
   providers: [DatePipe],
 })
 export class StudentProfileComponent {
-  private dataService = inject(DataService);
+  private tutorService = inject(TutorDataService);
   private authService = inject(AuthService);
   
-  student = input.required<Student>();
-  schedule = input.required<Course[]>();
-  assignments = input.required<Assignment[]>();
-  attendance = input.required<Attendance | null>();
-  lessonPlans = input.required<LessonPlan[]>();
+  student = input.required<EnrichedStudent>();
 
   back = output<void>();
   
@@ -40,40 +36,37 @@ export class StudentProfileComponent {
     if (!this.isEditMode()) {
         const currentStudent = this.student();
         this.editableStudent.set({
-            name: currentStudent.name,
-            authorizedEmail: currentStudent.authorizedEmail,
-            hourlyRate: currentStudent.hourlyRate,
-            timeZone: current.timeZone,
-            status: currentStudent.status
+            full_name: currentStudent.full_name,
+            email: currentStudent.email,
+            time_zone: currentStudent.time_zone,
+            is_active: currentStudent.is_active
         });
     }
     this.isEditMode.update(val => !val);
   }
 
-  saveChanges(): void {
-    // TODO: Implement updateStudentProfile in DataService
-    // this.dataService.updateStudentProfile(this.student().studentId, this.editableStudent());
+  async saveChanges(): Promise<void> {
+    // await this.tutorService.updateStudentProfile(this.student().id, this.editableStudent());
     this.isEditMode.set(false);
-    alert('Student profile updated!');
+    alert('Student profile update not implemented yet.');
   }
   
-  addLessonPlan(): void {
+  async addLessonPlan(): Promise<void> {
     const planData = this.newLessonPlanModel();
     if (!planData.topics) {
       alert('Please enter topics for the lesson plan.');
       return;
     }
     
-    // TODO: Implement addLessonPlan in DataService
-    // this.dataService.addLessonPlan({
-    //   studentId: this.student().studentId,
-    //   teacherId: this.currentUser()?.entityId || '', 
+    // await this.tutorService.addLessonPlan({
+    //   studentId: this.student().id,
+    //   teacherId: this.currentUser()?.id || '', 
     //   date: new Date().toISOString().split('T')[0],
     //   ...planData
     // });
 
     this.newLessonPlanModel.set({ topics: '', notes: ''});
-    alert('Lesson plan added!');
+    alert('Lesson plan creation not implemented yet.');
   }
 
   getAssignmentStatusColor(status: string): string {

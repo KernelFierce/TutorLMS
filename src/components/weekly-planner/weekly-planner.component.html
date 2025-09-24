@@ -20,10 +20,10 @@
           </div>
           <div class="mt-2 space-y-2">
             <!-- Scheduled Classes -->
-            @for(session of day.schedule; track session.classId) {
+            @for(session of day.schedule; track session.id) {
               <div class="bg-indigo-100 border border-indigo-200 text-indigo-800 rounded-md p-2 text-xs">
-                <p class="font-bold">{{ session.localTime }} - {{ session.studentName }}</p>
-                <p class="truncate">{{ session.topicsCovered }}</p>
+                <p class="font-bold">{{ session.localStartTime }} - {{ session.students[0]?.full_name }}</p>
+                <p class="truncate">{{ session.title }}</p>
               </div>
             }
             <!-- Available Slots -->

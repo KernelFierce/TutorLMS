@@ -1,9 +1,8 @@
-
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../data.service';
-import { Lead, RecurrenceRule, StudentStatus } from '../../models';
+import { TutorDataService } from '../../tutor-data.service';
+import { Lead, RecurrenceRule } from '../../models';
 
 @Component({
   selector: 'app-action-forms',
@@ -12,15 +11,13 @@ import { Lead, RecurrenceRule, StudentStatus } from '../../models';
   imports: [CommonModule, FormsModule]
 })
 export class ActionFormsComponent {
-  private dataService = inject(DataService);
+  private tutorService = inject(TutorDataService);
   
   activeForm = signal<'session' | 'class' | 'demo' | 'payment' | 'assign'>('session');
   
-  students = computed(() => this.dataService.students().filter(s => s.status === StudentStatus.Active));
-  teachers = this.dataService.teachers;
-  
-  // TODO: Implement leads signal in DataService
-  leads = signal<Lead[]>([]); 
+  students = computed(() => this.tutorService.students().filter(s => s.is_active));
+  teachers = this.tutorService.teachers;
+  leads = computed(() => this.tutorService.leads().filter(l => l.status === 'New' || l.status === 'Contacted'));
   
   timezones = signal([
     'UTC',
@@ -70,7 +67,6 @@ export class ActionFormsComponent {
 
   selectedLead = computed(() => {
     const leadId = this.demoModel().leadId;
-    // TODO: Update when leads are available in DataService
     return this.leads().find(l => l.id === leadId);
   });
 
@@ -78,11 +74,10 @@ export class ActionFormsComponent {
     this.activeForm.set(form);
   }
 
-  onLogSession(): void {
+  async onLogSession(): Promise<void> {
     const sessionData = this.sessionModel();
     if (sessionData.studentId && sessionData.teacherId && sessionData.durationHours > 0 && sessionData.topicsCovered) {
-      // TODO: Implement logSession in DataService
-      // this.dataService.logSession(sessionData);
+      await this.tutorService.logSession(sessionData);
       this.sessionModel.set({ studentId: '', teacherId: '', date: new Date().toISOString().split('T')[0], startTime: '12:00', durationHours: 1, topicsCovered: '', timeZone: 'Asia/Kolkata' });
       alert('Session logged successfully!');
     } else {
@@ -90,7 +85,7 @@ export class ActionFormsComponent {
     }
   }
 
-  onScheduleClass(): void {
+  async onScheduleClass(): Promise<void> {
     const classData = this.classModel();
     if (classData.studentId && classData.teacherId && classData.durationHours > 0) {
       if (classData.recurring) {
@@ -98,11 +93,18 @@ export class ActionFormsComponent {
           alert('Please provide an end date for the recurring series.');
           return;
         }
-        // TODO: Implement scheduleRecurringClass in DataService
-        // this.dataService.scheduleRecurringClass(classData);
+        // Recurring logic to be implemented
+        alert('Recurring class scheduling is not yet implemented.');
       } else {
-        // TODO: Implement scheduleClass in DataService
-        // this.dataService.scheduleClass(classData);
+        await this.tutorService.scheduleClass({
+          studentId: classData.studentId,
+          teacherId: classData.teacherId,
+          date: classData.recurrenceRule.startDate,
+          startTime: classData.startTime,
+          durationHours: classData.durationHours,
+          topicsCovered: classData.topicsCovered,
+          timeZone: classData.timeZone,
+        });
       }
 
       this.resetClassModel();
@@ -130,23 +132,21 @@ export class ActionFormsComponent {
       });
   }
 
-  onScheduleDemo(): void {
+  async onScheduleDemo(): Promise<void> {
     const demoData = this.demoModel();
     if (demoData.leadId && demoData.date && demoData.teacherId && demoData.startTime) {
-      // TODO: Implement scheduleDemo in DataService
-      // this.dataService.scheduleDemo(demoData);
+      // await this.tutorService.scheduleDemo(demoData);
       this.demoModel.set({ leadId: '', teacherId: '', date: new Date().toISOString().split('T')[0], startTime: '12:00' });
-       alert('Demo scheduled! Confirmation emails have been sent.');
+       alert('Demo scheduling is not yet implemented.');
     } else {
       alert('Please fill all demo fields.');
     }
   }
 
-  onLogPayment(): void {
+  async onLogPayment(): Promise<void> {
     const paymentData = this.paymentModel();
     if (paymentData.studentId && paymentData.amount > 0) {
-      // TODO: Implement logPayment in DataService
-      // this.dataService.logPayment(paymentData);
+      await this.tutorService.logPayment(paymentData);
       this.paymentModel.set({ studentId: '', paymentDate: new Date().toISOString().split('T')[0], amount: 0, currency: 'USD' });
       alert('Payment logged successfully!');
     } else {
@@ -154,11 +154,10 @@ export class ActionFormsComponent {
     }
   }
 
-  onAssignTask(): void {
+  async onAssignTask(): Promise<void> {
     const taskData = this.assignmentModel();
     if (taskData.studentId && taskData.teacherId && taskData.title && taskData.dueDate) {
-        // TODO: Implement createAssignment in DataService
-        // this.dataService.createAssignment(taskData);
+        await this.tutorService.assignTask(taskData);
         this.assignmentModel.set({
             studentId: '',
             teacherId: '',

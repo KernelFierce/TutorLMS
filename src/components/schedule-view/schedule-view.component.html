@@ -7,24 +7,24 @@
             <span class="text-sm font-normal text-slate-500 ml-2">{{ group.date }}</span>
           </h3>
           <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            @for (session of group.sessions; track session.classId) {
+            @for (session of group.sessions; track session.id) {
               <div class="border border-slate-200 rounded-lg p-4 flex flex-col justify-between" 
                 [class.bg-slate-50]="session.status !== 'Scheduled'">
                 <div class="flex-grow">
                   <div class="flex justify-between items-start">
-                    <p class="font-bold text-slate-800" [class.line-through]="session.status === 'Canceled'">
-                      @if (currentUser()?.role === 'Student') {
-                        {{ session.teacherName }}
+                    <p class="font-bold text-slate-800" [class.line-through]="session.status === 'Cancelled'">
+                      @if (currentUser()?.roles.includes('Student')) {
+                        {{ session.teacher.full_name }}
                       } @else {
-                        {{ session.studentName }}
+                        {{ session.students[0]?.full_name || 'Student' }}
                       }
                     </p>
                     <span class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full whitespace-nowrap">
-                      {{ session.localTime }} {{ session.localTimeZone }}
+                      {{ session.localStartTime }} {{ session.localTimeZone }}
                     </span>
                   </div>
                   <p class="text-sm text-slate-600 mt-2">
-                    {{ session.topicsCovered }}
+                    {{ session.title }}
                   </p>
                 </div>
 
@@ -32,7 +32,7 @@
                  <div class="mt-4 text-center">
                     @switch (session.status) {
                         @case('Completed') { <span class="text-xs font-bold uppercase text-green-600">Completed</span> }
-                        @case('Canceled') { <span class="text-xs font-bold uppercase text-red-600">Canceled</span> }
+                        @case('Cancelled') { <span class="text-xs font-bold uppercase text-red-600">Cancelled</span> }
                         @case('Student No Show') { <span class="text-xs font-bold uppercase text-yellow-600">Student No Show</span> }
                         @case('Teacher No Show') { <span class="text-xs font-bold uppercase text-orange-600">Teacher No Show</span> }
                         @case('Reschedule Pending') { <span class="text-xs font-bold uppercase text-blue-600">Reschedule Pending</span> }
@@ -45,12 +45,12 @@
                   @if (session.status === 'Scheduled') {
                     @if (session.isPast) {
                         <!-- Past Scheduled Actions (Attendance) -->
-                        @if (currentUser()?.role === 'Admin' || currentUser()?.role === 'Teacher') {
+                        @if (currentUser()?.roles.includes('Admin') || currentUser()?.roles.includes('Teacher')) {
                             <div class="grid grid-cols-1 gap-2">
-                               <button (click)="updateStatus(session.classId, 'Completed')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Mark Completed</button>
+                               <button (click)="updateStatus(session.id, 'Completed')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Mark Completed</button>
                                <div class="grid grid-cols-2 gap-2">
-                                 <button (click)="updateStatus(session.classId, 'Student No Show')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600">Student No-Show</button>
-                                 <button (click)="updateStatus(session.classId, 'Teacher No Show')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600">Teacher No-Show</button>
+                                 <button (click)="updateStatus(session.id, 'Student No Show')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600">Student No-Show</button>
+                                 <button (click)="updateStatus(session.id, 'Teacher No Show')" class="text-center w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600">Teacher No-Show</button>
                                </div>
                             </div>
                         } @else {
@@ -58,27 +58,27 @@
                         }
                     } @else {
                         <!-- Future Scheduled Actions -->
-                        @if (session.meetLink) {
-                            <a [href]="session.meetLink" target="_blank" rel="noopener noreferrer" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                        @if (session.meet_link) {
+                            <a [href]="session.meet_link" target="_blank" rel="noopener noreferrer" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
                                 Join with Google Meet
                             </a>
                         }
-                        @if (currentUser()?.role === 'Admin') {
+                        @if (currentUser()?.roles.includes('Admin')) {
                           <div class="grid grid-cols-2 gap-2">
-                            <button (click)="initiateReschedule(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-slate-300 text-sm leading-4 font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">
+                            <button (click)="initiateReschedule(session.id)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-slate-300 text-sm leading-4 font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">
                                 Reschedule
                             </button>
-                            <button (click)="cancelSession(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
+                            <button (click)="cancelSession(session.id)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
                                 Cancel
                             </button>
                           </div>
                         }
-                        @if (currentUser()?.role === 'Teacher' || currentUser()?.role === 'Student') {
+                        @if (currentUser()?.roles.includes('Teacher') || currentUser()?.roles.includes('Student')) {
                             <div class="grid grid-cols-2 gap-2">
-                                <button (click)="initiateReschedule(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-slate-300 text-sm leading-4 font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">
+                                <button (click)="initiateReschedule(session.id)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-slate-300 text-sm leading-4 font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">
                                     Reschedule
                                 </button>
-                                <button (click)="requestCancellation(session.classId)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700">
+                                <button (click)="requestCancellation(session.id)" class="w-full text-center inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700">
                                     Request Cancellation
                                 </button>
                             </div>
@@ -88,7 +88,7 @@
                 </div>
 
                 <div class="text-xs text-slate-400 text-center pt-2 border-t border-slate-100 mt-3">
-                  Duration: {{ session.durationHours }}h
+                  <!-- Duration: {{ session.durationHours }}h -->
                 </div>
               </div>
             }

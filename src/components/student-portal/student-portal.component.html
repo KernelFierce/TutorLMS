@@ -53,17 +53,20 @@
   <main class="flex-1 bg-slate-100 overflow-y-auto">
     <div class="p-8">
       <!-- Header -->
-      <header class="mb-8">
-        <h2 class="text-3xl font-bold text-slate-800">{{ getGreeting() }}, {{ currentUser()?.name }}!</h2>
-        <p class="text-slate-500 mt-1">
-          @switch (activeView()) {
-            @case('dashboard') { Welcome to your personal dashboard. }
-            @case('schedule') { Here is your schedule for the upcoming week. }
-            @case('assignments') { Here are your current assignments. }
-            @case('reschedule-requests') { Manage any pending reschedule requests. }
-            @case('messages') { Communicate with your teachers. }
-          }
-        </p>
+      <header class="mb-8 flex justify-between items-start">
+        <div>
+          <h2 class="text-3xl font-bold text-slate-800">{{ getGreeting() }}, {{ currentUser()?.full_name }}!</h2>
+          <p class="text-slate-500 mt-1">
+            @switch (activeView()) {
+              @case('dashboard') { Welcome to your personal dashboard. }
+              @case('schedule') { Here is your schedule for the upcoming week. }
+              @case('assignments') { Here are your current assignments. }
+              @case('reschedule-requests') { Manage any pending reschedule requests. }
+              @case('messages') { Communicate with your teachers. }
+            }
+          </p>
+        </div>
+        <app-role-switcher></app-role-switcher>
       </header>
 
       @switch (activeView()) {
@@ -93,17 +96,17 @@
                   @if (todaysAgenda().length > 0) {
                     <ul class="space-y-4">
                       @for (item of todaysAgenda(); track item.title) {
-                        <li class="flex items-start" [class.opacity-50]="item.status === 'Canceled'">
+                        <li class="flex items-start" [class.opacity-50]="item.status === 'Cancelled'">
                            <div class="flex-1 flex items-center">
                               <div class="w-3 h-3 bg-green-500 rounded-full mt-1.5 mr-4 flex-shrink-0"></div>
                               <div>
-                                <p class="font-medium text-slate-800" [class.line-through]="item.status === 'Canceled'">{{ item.title }}</p>
+                                <p class="font-medium text-slate-800" [class.line-through]="item.status === 'Cancelled'">{{ item.title }}</p>
                                 <p class="text-sm text-slate-500">{{ item.details }}</p>
                               </div>
                           </div>
                           <div class="flex items-center flex-shrink-0 ml-4">
-                            @if (item.status === 'Canceled') {
-                                <span class="text-sm font-semibold text-red-600 whitespace-nowrap">Canceled</span>
+                            @if (item.status === 'Cancelled') {
+                                <span class="text-sm font-semibold text-red-600 whitespace-nowrap">Cancelled</span>
                             } @else {
                                 @if(item.time) {
                                 <span class="text-sm font-semibold text-indigo-600">{{ item.time }}</span>
@@ -160,8 +163,8 @@
               <label for="requestTeacher" class="block text-sm font-medium text-slate-700">Select a Teacher</label>
               <select id="requestTeacher" name="requestTeacher" [(ngModel)]="newSessionModel().teacherId" (change)="onTeacherSelectForRequest()" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                   <option value="" disabled>Select a teacher...</option>
-                  @for(teacher of teachersForStudent(); track teacher.teacherId) {
-                      <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+                  @for(teacher of teachersForStudent(); track teacher.id) {
+                      <option [value]="teacher.id">{{ teacher.full_name }}</option>
                   }
               </select>
           </div>

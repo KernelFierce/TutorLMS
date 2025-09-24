@@ -3,14 +3,14 @@
     <thead class="text-xs text-slate-700 uppercase bg-slate-50">
       <tr>
         <th scope="col" class="px-6 py-3">Title</th>
-        @if (currentUser()?.role === 'Admin') {
+        @if (currentUser()?.roles.includes('Admin')) {
           <th scope="col" class="px-6 py-3">Student</th>
           <th scope="col" class="px-6 py-3">Teacher</th>
         }
-        @if (currentUser()?.role === 'Teacher') {
+        @if (currentUser()?.roles.includes('Teacher')) {
           <th scope="col" class="px-6 py-3">Student</th>
         }
-        @if (currentUser()?.role === 'Student') {
+        @if (currentUser()?.roles.includes('Student')) {
           <th scope="col" class="px-6 py-3">Teacher</th>
         }
         <th scope="col" class="px-6 py-3">Due Date</th>
@@ -21,68 +21,61 @@
       </tr>
     </thead>
     <tbody>
-      @for (assignment of assignments(); track assignment.assignmentId) {
+      @for (submission of submissions(); track submission.id) {
         <tr class="bg-white border-b hover:bg-slate-50">
           <td class="px-6 py-4 font-medium text-slate-900">
-              <p>{{ assignment.title }}</p>
-              @if (assignment.feedback && currentUser()?.role === 'Student') {
-                 <p class="text-xs text-slate-500 mt-1 italic"><strong>Feedback:</strong> {{ assignment.feedback }}</p>
+              <p>{{ submission.assignment.title }}</p>
+              @if (submission.feedback && currentUser()?.roles.includes('Student')) {
+                 <p class="text-xs text-slate-500 mt-1 italic"><strong>Feedback:</strong> {{ submission.feedback }}</p>
               }
           </td>
           
-          @if (currentUser()?.role === 'Admin') {
-            <td class="px-6 py-4">{{ assignment.studentName }}</td>
-            <td class="px-6 py-4">{{ assignment.teacherName }}</td>
+          @if (currentUser()?.roles.includes('Admin')) {
+            <td class="px-6 py-4">{{ submission.student.full_name }}</td>
+            <td class="px-6 py-4">{{ submission.assignment.course.teacher.full_name }}</td>
           }
-          @if (currentUser()?.role === 'Teacher') {
-            <td class="px-6 py-4">{{ assignment.studentName }}</td>
+          @if (currentUser()?.roles.includes('Teacher')) {
+            <td class="px-6 py-4">{{ submission.student.full_name }}</td>
           }
-          @if (currentUser()?.role === 'Student') {
-            <td class="px-6 py-4">{{ assignment.teacherName }}</td>
+          @if (currentUser()?.roles.includes('Student')) {
+            <td class="px-6 py-4">{{ submission.assignment.course.teacher.full_name }}</td>
           }
 
-          <td class="px-6 py-4">{{ assignment.dueDate }}</td>
-          <td class="px-6 py-4">{{ assignment.submissionDate || '---' }}</td>
+          <td class="px-6 py-4">{{ submission.assignment.due_date | date:'yyyy-MM-dd' }}</td>
+          <td class="px-6 py-4">{{ submission.submitted_at | date:'yyyy-MM-dd' || '---' }}</td>
           <td class="px-6 py-4">
-            <span [class]="getStatusColor(assignment.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-              {{ assignment.status }}
+            <span [class]="getStatusColor(submission.uiStatus)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+              {{ submission.uiStatus }}
             </span>
-             @if (assignment.isLate) {
+             @if (submission.isLate) {
                 <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Late</span>
             }
           </td>
           <td class="px-6 py-4 font-bold text-slate-700">
-            {{ assignment.grade || 'N/A' }}
-            @if(assignment.gradingSystem === 'Points' && assignment.maxPoints) {
-                <span class="text-xs font-normal text-slate-500"> / {{assignment.maxPoints}}</span>
-            }
+            {{ submission.grade || 'N/A' }}
           </td>
           <td class="px-6 py-4 text-sm">
             <div class="flex items-center space-x-4">
-                @if (currentUser()?.role === 'Student' && assignment.status === 'Assigned') {
+                @if (currentUser()?.roles.includes('Student') && submission.uiStatus === 'Assigned') {
                     <label class="font-medium text-indigo-600 hover:text-indigo-900 cursor-pointer">
                         <span>Submit Work</span>
-                        <input type="file" class="hidden" (change)="onFileSelected($event, assignment.assignmentId)">
+                        <input type="file" class="hidden" (change)="onFileSelected($event, submission.id)">
                     </label>
                 }
-                @if (assignment.status === 'Submitted' || assignment.status === 'Graded') {
-                    @if (assignment.submissionFileName) {
-                        <a (click)="viewSubmission(assignment)" class="font-medium text-blue-600 hover:text-blue-900 cursor-pointer">View</a>
+                @if (submission.uiStatus === 'Submitted' || submission.uiStatus === 'Graded') {
+                    @if (submission.content) {
+                        <a (click)="viewSubmission(submission)" class="font-medium text-blue-600 hover:text-blue-900 cursor-pointer">View</a>
                     }
                 }
-                @if ((currentUser()?.role === 'Teacher' || currentUser()?.role === 'Admin')) {
-                    @if (assignment.status === 'Submitted') {
-                        <button (click)="openGradeModal(assignment)" class="font-medium text-green-600 hover:text-green-900">Grade</button>
+                @if ((currentUser()?.roles.includes('Teacher') || currentUser()?.roles.includes('Admin'))) {
+                    @if (submission.uiStatus === 'Submitted') {
+                        <button (click)="openGradeModal(submission)" class="font-medium text-green-600 hover:text-green-900">Grade</button>
                     }
-                    @if (assignment.status === 'Graded') {
-                        <button (click)="openGradeModal(assignment)" class="font-medium text-yellow-600 hover:text-yellow-900">Edit Grade</button>
+                    @if (submission.uiStatus === 'Graded') {
+                        <button (click)="openGradeModal(submission)" class="font-medium text-yellow-600 hover:text-yellow-900">Edit Grade</button>
                     }
-                    @if (assignment.status === 'Assigned') {
-                        @if (!assignment.notificationSent) {
-                            <button (click)="sendNotification(assignment.assignmentId)" class="font-medium text-blue-600 hover:text-blue-900">Notify</button>
-                        } @else {
-                            <span class="text-xs text-slate-500">Notified</span>
-                        }
+                    @if (submission.uiStatus === 'Assigned') {
+                        <button (click)="sendNotification(submission.id)" class="font-medium text-blue-600 hover:text-blue-900">Notify</button>
                     }
                 }
             </div>
@@ -104,23 +97,17 @@
 </div>
 
 <!-- Grade Assignment Modal -->
-@if (isGradeModalOpen() && gradingAssignment(); as assignment) {
+@if (isGradeModalOpen() && gradingSubmission(); as submission) {
   <div class="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center" (click)="closeGradeModal()">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg m-4" (click)="$event.stopPropagation()">
-      <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Grade Assignment for {{ assignment.studentName }}</h3>
-      <p class="text-sm text-slate-600 mb-4"><strong>Title:</strong> {{ assignment.title }}</p>
+      <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Grade Assignment for {{ submission.student.full_name }}</h3>
+      <p class="text-sm text-slate-600 mb-4"><strong>Title:</strong> {{ submission.assignment.title }}</p>
 
       <form (ngSubmit)="saveGrade()" class="space-y-4">
           <div>
             <label for="grade" class="block text-sm font-medium text-slate-700">Grade</label>
             <div class="flex items-center mt-1">
               <input id="grade" name="grade" type="text" [(ngModel)]="gradeModel().grade" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-slate-300 rounded-md">
-              @if (assignment.gradingSystem === 'Points') {
-                <span class="ml-2 text-slate-500 text-sm">/ {{ assignment.maxPoints }}</span>
-              }
-               @if (assignment.gradingSystem === 'Percentage') {
-                <span class="ml-2 text-slate-500 text-sm">%</span>
-              }
             </div>
           </div>
           <div>

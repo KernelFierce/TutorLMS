@@ -1,36 +1,41 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SupabaseService } from '../../supabase.service';
+import { AuthService } from '../../auth.service';
 import { FormsModule } from '@angular/forms';
+import { User } from '../../models';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule]
 })
 export class LoginComponent {
-  private supabaseService = inject(SupabaseService);
+  private authService = inject(AuthService);
 
+  @Output() showSignup = new EventEmitter<void>();
+  
   email = signal('');
   password = signal('');
+  
+  isSubmitting = signal(false);
+  errorMessage = signal<string | null>(null);
 
-  async login(): Promise<void> {
-    try {
-      await this.supabaseService.login(this.email(), this.password());
-    } catch (error) {
-      console.error('Login failed:', error);
-      // Handle login error (e.g., show an error message)
+  async onLogin(): Promise<void> {
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
+    
+    const result = await this.authService.login(this.email(), this.password());
+    
+    if (!result.success) {
+      this.errorMessage.set(result.message);
     }
+    // On success, the onAuthStateChange listener in AuthService will handle everything else.
+    
+    this.isSubmitting.set(false);
   }
 
-  async register(): Promise<void> {
-    try {
-      await this.supabaseService.register(this.email(), this.password());
-    } catch (error) {
-      console.error('Registration failed:', error);
-      // Handle registration error
-    }
+  onShowSignup(): void {
+    this.showSignup.emit();
   }
 }

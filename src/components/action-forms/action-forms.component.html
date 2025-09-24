@@ -28,8 +28,8 @@
             <label for="sessionStudent" class="block text-sm font-medium text-slate-700">Student</label>
             <select id="sessionStudent" name="sessionStudent" [(ngModel)]="sessionModel().studentId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a student</option>
-              @for (student of students(); track student.studentId) {
-                <option [value]="student.studentId">{{ student.name }}</option>
+              @for (student of students(); track student.id) {
+                <option [value]="student.id">{{ student.full_name }}</option>
               }
             </select>
           </div>
@@ -37,8 +37,8 @@
             <label for="sessionTeacher" class="block text-sm font-medium text-slate-700">Teacher</label>
             <select id="sessionTeacher" name="sessionTeacher" [(ngModel)]="sessionModel().teacherId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a teacher</option>
-              @for (teacher of teachers(); track teacher.teacherId) {
-                <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+              @for (teacher of teachers(); track teacher.id) {
+                <option [value]="teacher.id">{{ teacher.full_name }}</option>
               }
             </select>
           </div>
@@ -80,8 +80,8 @@
             <label for="classStudent" class="block text-sm font-medium text-slate-700">Student</label>
             <select id="classStudent" name="classStudent" [(ngModel)]="classModel().studentId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a student</option>
-              @for (student of students(); track student.studentId) {
-                <option [value]="student.studentId">{{ student.name }}</option>
+              @for (student of students(); track student.id) {
+                <option [value]="student.id">{{ student.full_name }}</option>
               }
             </select>
           </div>
@@ -89,8 +89,8 @@
             <label for="classTeacher" class="block text-sm font-medium text-slate-700">Teacher</label>
             <select id="classTeacher" name="classTeacher" [(ngModel)]="classModel().teacherId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a teacher</option>
-              @for (teacher of teachers(); track teacher.teacherId) {
-                <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+              @for (teacher of teachers(); track teacher.id) {
+                <option [value]="teacher.id">{{ teacher.full_name }}</option>
               }
             </select>
           </div>
@@ -195,8 +195,8 @@
             <label for="demoTeacher" class="block text-sm font-medium text-slate-700">Assign Teacher</label>
             <select id="demoTeacher" name="demoTeacher" [(ngModel)]="demoModel().teacherId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a teacher</option>
-              @for (teacher of teachers(); track teacher.teacherId) {
-                <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+              @for (teacher of teachers(); track teacher.id) {
+                <option [value]="teacher.id">{{ teacher.full_name }}</option>
               }
             </select>
         </div>
@@ -222,8 +222,8 @@
             <label for="paymentStudent" class="block text-sm font-medium text-slate-700">Student</label>
             <select id="paymentStudent" name="paymentStudent" [(ngModel)]="paymentModel().studentId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a student</option>
-              @for (student of students(); track student.studentId) {
-                <option [value]="student.studentId">{{ student.name }}</option>
+              @for (student of students(); track student.id) {
+                <option [value]="student.id">{{ student.full_name }}</option>
               }
             </select>
           </div>
@@ -259,8 +259,8 @@
             <label for="assignStudent" class="block text-sm font-medium text-slate-700">Student</label>
             <select id="assignStudent" name="assignStudent" [(ngModel)]="assignmentModel().studentId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a student</option>
-              @for (student of students(); track student.studentId) {
-                <option [value]="student.studentId">{{ student.name }}</option>
+              @for (student of students(); track student.id) {
+                <option [value]="student.id">{{ student.full_name }}</option>
               }
             </select>
           </div>
@@ -268,8 +268,8 @@
             <label for="assignTeacher" class="block text-sm font-medium text-slate-700">Assigning Teacher</label>
             <select id="assignTeacher" name="assignTeacher" [(ngModel)]="assignmentModel().teacherId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option value="" disabled>Select a teacher</option>
-              @for (teacher of teachers(); track teacher.teacherId) {
-                <option [value]="teacher.teacherId">{{ teacher.name }}</option>
+              @for (teacher of teachers(); track teacher.id) {
+                <option [value]="teacher.id">{{ teacher.full_name }}</option>
               }
             </select>
           </div>

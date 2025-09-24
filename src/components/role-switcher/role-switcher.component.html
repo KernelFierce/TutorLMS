@@ -1,0 +1,12 @@
+@if (currentUser()?.roles && currentUser()!.roles.length > 1) {
+    <div class="flex items-center space-x-2 bg-slate-200 p-1 rounded-lg">
+        @for(role of currentUser()?.roles; track role) {
+            <button 
+                (click)="switchRole(role)"
+                [class]="activeRole() === role ? 'bg-white text-slate-800 shadow' : 'text-slate-600 hover:bg-white/60'"
+                class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200">
+                {{ role }}
+            </button>
+        }
+    </div>
+}

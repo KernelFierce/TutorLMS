@@ -1,5 +1,5 @@
 <div class="bg-white rounded-lg shadow-md h-full flex overflow-hidden">
-  @if(currentUser()?.role !== 'Student') {
+  @if(!currentUser()?.roles.includes('Student')) {
     <!-- Conversation List (For Admin/Teacher) -->
     <aside class="w-1/3 border-r border-slate-200 overflow-y-auto">
       <div class="p-4 border-b border-slate-200">
@@ -10,15 +10,11 @@
           <li (click)="selectConversation(convo.id)" [class]="activeConversationId() === convo.id ? 'bg-indigo-50' : 'hover:bg-slate-50'" class="p-4 cursor-pointer transition-colors duration-150">
             <div class="flex items-center justify-between">
               <p class="font-semibold text-slate-900">
-                @if(currentUser()?.role === 'Admin') {
-                  {{ convo.studentName }} / {{ convo.teacherName }}
-                } @else {
-                  {{ convo.studentName }}
-                }
+                {{ convo.otherParticipants[0]?.full_name || 'Conversation' }}
               </p>
               <span class="text-xs text-slate-400">{{ convo.lastMessageTimestamp | date:'shortTime' }}</span>
             </div>
-            <p class="text-sm text-slate-500 truncate mt-1">{{ convo.lastMessageText }}</p>
+            <p class="text-sm text-slate-500 truncate mt-1">{{ convo.lastMessagePreview }}</p>
           </li>
         } @empty {
            <p class="p-6 text-sm text-slate-500 text-center">No conversations yet.</p>
@@ -28,40 +24,32 @@
   }
 
   <!-- Chat Window -->
-  <main [class]="currentUser()?.role === 'Student' ? 'w-full' : 'w-2/3'" class="flex flex-col">
+  <main [class]="currentUser()?.roles.includes('Student') ? 'w-full' : 'w-2/3'" class="flex flex-col">
     @if (activeConversation(); as convo) {
       <!-- Chat Header -->
       <header class="flex-shrink-0 flex items-center p-4 border-b border-slate-200">
         <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
           <span class="font-bold text-slate-600">
-            @if(currentUser()?.role === 'Student') {
-              {{ convo.teacherName.charAt(0) }}
-            } @else {
-              {{ convo.studentName.charAt(0) }}
-            }
+            {{ (convo.otherParticipants[0]?.full_name || 'U').charAt(0) }}
           </span>
         </div>
         <div>
            <h3 class="font-semibold text-slate-800">
-             @if(currentUser()?.role === 'Student') {
-                {{ convo.teacherName }}
-              } @else {
-                {{ convo.studentName }}
-              }
+             {{ convo.otherParticipants[0]?.full_name || 'Conversation' }}
            </h3>
         </div>
       </header>
       
       <!-- Messages -->
       <div #scrollContainer class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50">
-        @for (msg of currentMessages(); track msg.messageId) {
+        @for (msg of currentMessages(); track msg.id) {
           <div class="flex" [class.justify-end]="msg.isCurrentUser">
             <div class="max-w-xs lg:max-w-md">
               <div [class]="msg.isCurrentUser ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-800'" class="rounded-lg px-4 py-2">
-                <p class="text-sm">{{ msg.text }}</p>
+                <p class="text-sm">{{ msg.content }}</p>
               </div>
               <p class="text-xs text-slate-400 mt-1" [class.text-right]="msg.isCurrentUser">
-                {{ msg.senderName }} &middot; {{ msg.timestamp | date:'shortTime' }}
+                {{ msg.sender.full_name }} &middot; {{ msg.created_at | date:'shortTime' }}
               </p>
             </div>
           </div>

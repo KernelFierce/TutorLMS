@@ -1,6 +1,6 @@
 <div class="flex items-center justify-center min-h-screen bg-slate-100">
-  <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg text-center">
-    <div>
+  <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
+    <div class="text-center">
       <div class="flex items-center justify-center mx-auto h-16 w-16 bg-slate-800 rounded-full">
          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18" />
@@ -12,37 +12,46 @@
         Welcome to TutorHub
       </h2>
       <p class="mt-2 text-sm text-slate-600">
-        Your all-in-one tutoring management system.
+        Sign in to your account
       </p>
     </div>
 
-    <form (ngSubmit)="login()" class="space-y-6">
+    <form (ngSubmit)="onLogin()" class="space-y-4 pt-4">
       <div>
-        <label for="email" class="sr-only">Email address</label>
-        <input id="email" name="email" type="email" [(ngModel)]="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
-      </div>
-      <div>
-        <label for="password" class="sr-only">Password</label>
-        <input id="password" name="password" type="password" [(ngModel)]="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
-      </div>
-
-      <div class="flex items-center justify-between">
-        <div class="text-sm">
-          <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500"> Forgot your password? </a>
+        <label for="email" class="block text-sm font-medium text-left text-slate-700">Email Address</label>
+        <div class="mt-1">
+          <input id="email" name="email" type="email" autocomplete="email" required [(ngModel)]="email"
+                 class="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
         </div>
       </div>
 
       <div>
-        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          Sign in
+        <label for="password" class="block text-sm font-medium text-left text-slate-700">Password</label>
+        <div class="mt-1">
+          <input id="password" name="password" type="password" autocomplete="current-password" required [(ngModel)]="password"
+                 class="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+      </div>
+      
+      @if(errorMessage()) {
+        <div class="bg-red-50 border-l-4 border-red-400 p-4">
+            <p class="text-sm text-red-700">{{ errorMessage() }}</p>
+        </div>
+      }
+
+      <div>
+        <button type="submit" [disabled]="isSubmitting()"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400">
+          Sign In
         </button>
       </div>
     </form>
 
-    <div class="text-center">
-      <p class="text-sm text-gray-600">Don't have an account? 
-        <a href="#" (click)="register()" class="font-medium text-indigo-600 hover:text-indigo-500"> Register </a>
-      </p>
+    <div class="text-center text-sm">
+      <a (click)="onShowSignup()" class="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer">
+        Don't have an account? Sign Up
+      </a>
     </div>
+    
   </div>
 </div>
